@@ -3,6 +3,7 @@
 namespace util
 {
     // This is from https://www.phc-forum.de/media/kunena/attachments/253/PHC-Protokoll.pdf
+    // CRC16/X25
     unsigned short PHC_CRC(unsigned char *Data, unsigned char NumData)
     {
         unsigned short crc16;
