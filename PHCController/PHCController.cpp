@@ -19,8 +19,6 @@ namespace esphome
             {
                 // Holds the abs. and relative address of the device
                 uint8_t address = read();
-                uint8_t device_class = (address & 0xE0) >> 5; // Mask 3 MRBits
-                uint8_t device_id = address & 0x1F;           // DIP settings (5 LRB)
 
                 uint8_t toggle_and_length = read();
                 bool toggle = toggle_and_length & 0x80; // Mask the MRB (toggle bit)
@@ -42,7 +40,7 @@ namespace esphome
                 for (int i = 0; i < length; i++)
                     concatinated_content[i + 2] = msg[i];
 
-                                // Validate the checksum
+                // Validate the checksum
                 short calculated_checksum = util::PHC_CRC(concatinated_content, length + 2);
 
                 if (calculated_checksum != msg_checksum)
@@ -53,9 +51,7 @@ namespace esphome
                     return;
                 }
 
-                process_command(&device_class, &device_id, msg, &length);
-
-                send_acknowledgement(&address);
+                process_command(&address, msg, &length);
             }
         }
 
@@ -72,11 +68,12 @@ namespace esphome
             }
         }
 
-        void PHCController::process_command(uint8_t *device_class, uint8_t *device_id, uint8_t *message, int *length)
+        void PHCController::process_command(uint8_t *device_class_id, uint8_t *message, int *length)
         {
-            
+            uint8_t device_id = *device_class_id & 0x1F; // DIP settings (5 LRB)
+            uint8_t device_class = *device_class_id & 0xE0;
             // EMD
-            if (*device_class == 0)
+            if (device_class == EMD_MODULE_ADDRESS)
             {
                 uint8_t channel = (message[0] & 0xF0) >> 4;
                 uint8_t action = message[0] & 0x0F;
@@ -84,7 +81,7 @@ namespace esphome
                 // Find the switch and set the state
                 for (auto *emd_switch : this->emd_switches)
                 {
-                    if (emd_switch->get_address() == *device_id && emd_switch->get_channel() == channel)
+                    if (emd_switch->get_address() == device_id && emd_switch->get_channel() == channel)
                     {
                         if (action == 0x02)
                             emd_switch->publish_state(true);
@@ -92,18 +89,40 @@ namespace esphome
                             emd_switch->publish_state(false);
                     }
                 }
+                send_acknowledgement(*device_class_id);
+            }
+
+            if (device_class == AMD_MODULE_ADDRESS)
+            {
+                // Check for Acknowledgement
+                if (message[0] == 0x00)
+                {
+                    uint8_t channels = message[1];
+                    for (int i = 0; i < 8; i++)
+                    {
+                        for (auto *amd_switch : this->amd_switches)
+                        {
+                            if (amd_switch->get_address() == device_id && amd_switch->get_channel() == i)
+                            {
+                                // Mask the channel and publish states accordingly
+                                bool state = channels & (0x1 << i);
+                                amd_switch->publish_state(state);
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        void PHCController::send_acknowledgement(uint8_t *address)
+        void PHCController::send_acknowledgement(uint8_t address)
         {
             // TODO: Do we need to flip the toggle bit?
-            uint8_t content[3] = {*address, 0x01, 0x00};
+            uint8_t content[3] = {address, 0x01, 0x00};
             short crc = util::PHC_CRC(content, 3);
 
-            uint8_t message[5] = {*address, 0x01, 0x00, (crc & 0xFF),(crc & 0xFF00) >> 8};
+            uint8_t message[5] = {address, 0x01, 0x00, static_cast<uint8_t>(crc & 0xFF), static_cast<uint8_t>((crc & 0xFF00) >> 8)};
 
-            write_array(message,5);
+            write_array(message, 5);
             flush();
         }
 

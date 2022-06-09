@@ -25,8 +25,8 @@ namespace esphome
       void register_EMD(EMD_switch::EMD *obj) { this->emd_switches.push_back(obj); }
 
     protected:
-      void process_command(uint8_t *device_class, uint8_t *device_id, uint8_t* message, int* length);
-      void send_acknowledgement(uint8_t *address);
+      void process_command(uint8_t *device_class_id, uint8_t *message, int *length);
+      void send_acknowledgement(uint8_t address);
 
       std::vector<AMD_switch::AMD *> amd_switches;
       std::vector<EMD_switch::EMD *> emd_switches;
