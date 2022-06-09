@@ -5,10 +5,11 @@ from esphome.components import switch
 from esphome.const import CONF_ID
 from ..PHCController import CONTROLLER_ID, PHCController
 
-DEPENDENCIES = ["PHCController"]
+DEPENDENCIES = ['PHCController']
 
-DEVICE_TYPE = 'DEVICE_TYPE'
-ADDRESS = 'ADDRESS'
+DEVICE_TYPE = 'device_type'
+ADDRESS = 'dip'
+CHANNEL = 'channel'
 
 AMD_ns = cg.esphome_ns.namespace('AMD_switch')
 AMD = AMD_ns.class_('AMD', switch.Switch, cg.Component)
@@ -17,7 +18,8 @@ CONFIG_SCHEMA = switch.SWITCH_SCHEMA.extend({
     cv.GenerateID(): cv.declare_id(AMD),
     cv.Optional(DEVICE_TYPE, default="switch"): cv.string,
     cv.Required(CONTROLLER_ID): cv.use_id(PHCController),
-    cv.Required(ADDRESS): cv.int_
+    cv.Required(ADDRESS): cv.int_,
+    cv.Required(CHANNEL): cv.int_
 }).extend(cv.COMPONENT_SCHEMA)
 
 
@@ -29,3 +31,4 @@ def to_code(config):
 
     cg.add(controller.register_AMD(var))
     cg.add(var.set_address(config[ADDRESS]))
+    cg.add(var.set_channel(config[CHANNEL]))

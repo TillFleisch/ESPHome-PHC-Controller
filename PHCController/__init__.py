@@ -6,9 +6,12 @@ from esphome.components.uart import UARTComponent
 
 from esphome.const import CONF_ID
 
+AUTO_LOAD = ['AMD', 'EMD']
+
 DEPENDENCIES = ['uart']
 
 CONTROLLER_ID = 'phc_controller_id'
+UART_ID = 'uart_id'
 
 
 phc_controller_ns = cg.esphome_ns.namespace('phc_controller')
@@ -17,7 +20,7 @@ PHCController = phc_controller_ns.class_(
 
 CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend({
     cv.GenerateID(): cv.declare_id(PHCController),
-    cv.Required("uart_id"): cv.use_id(UARTComponent)
+    cv.Required(UART_ID): cv.use_id(UARTComponent)
 })
 
 

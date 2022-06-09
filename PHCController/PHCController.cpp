@@ -15,15 +15,9 @@ namespace esphome
         int i = 0;
         void PHCController::loop()
         {
-            i++;
-            if (i > 1000)
+            if (available())
             {
-                i = 0;
-                for (auto *amd_switch : this->amd_switches)
-                    if (amd_switch->get_address() == 1)
-                        amd_switch->write_state(!id(amd_switch).state);
             }
-
         }
 
         void PHCController::dump_config()
