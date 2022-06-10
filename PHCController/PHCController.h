@@ -5,6 +5,7 @@
 #include "util.h"
 #include "../AMD/AMD.h"
 #include "../EMD/EMD.h"
+#include "../EMD/EMD_light.h"
 
 namespace esphome
 {
@@ -23,6 +24,11 @@ namespace esphome
         obj->set_uart_device(static_cast<uart::UARTDevice *>(this));
       }
       void register_EMD(EMD_switch::EMD *obj) { this->emd_switches.push_back(obj); }
+      void register_EMDLight(EMD_light::EMDLight *obj)
+      {
+        this->emd_lights.push_back(obj);
+        obj->set_uart_device(static_cast<uart::UARTDevice *>(this));
+      }
 
     protected:
       void process_command(uint8_t *device_class_id, uint8_t *message, int *length);
@@ -30,6 +36,7 @@ namespace esphome
 
       std::vector<AMD_binary::AMD *> amds;
       std::vector<EMD_switch::EMD *> emd_switches;
+      std::vector<EMD_light::EMDLight *> emd_lights;
     };
 
   } // namespace phc_controller

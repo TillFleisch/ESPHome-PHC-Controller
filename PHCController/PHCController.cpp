@@ -78,18 +78,34 @@ namespace esphome
                 uint8_t channel = (message[0] & 0xF0) >> 4;
                 uint8_t action = message[0] & 0x0F;
 
+                // Handle acknowledgement (such as switch led state)
+                if (action == 0x00)
+                {
+                    for (auto *emd_light : this->emd_lights)
+                    {
+                        if (emd_light->get_address() == device_id && emd_light->get_channel() == channel)
+                        {
+                            // since we don't know the state, we toggle the current state
+                            emd_light->publish_state(!id(emd_light).state);
+                        }
+                    }
+
+                    return;
+                }
+
                 // Find the switch and set the state
                 for (auto *emd_switch : this->emd_switches)
                 {
                     if (emd_switch->get_address() == device_id && emd_switch->get_channel() == channel)
                     {
-                        if (action == 0x02)
+                        if (action == 0x02) // ON
                             emd_switch->publish_state(true);
-                        if (action == 0x07)
+                        if (action == 0x07) // OFF
                             emd_switch->publish_state(false);
                     }
                 }
                 send_acknowledgement(*device_class_id);
+                return;
             }
 
             if (device_class == AMD_MODULE_ADDRESS)
@@ -113,7 +129,11 @@ namespace esphome
                         }
                     }
                 }
+                return;
             }
+
+            // Send default ack
+            send_acknowledgement(*device_class_id);
         }
 
         void PHCController::send_acknowledgement(uint8_t address)
