@@ -60,11 +60,11 @@ namespace esphome
             ESP_LOGCONFIG(TAG, "PHC Controller");
             for (auto *emd_switch : this->emd_switches)
             {
-                LOG_SWITCH(" ", "EMD_Switch", emd_switch);
+                LOG_SWITCH(" ", "EMD.switch", emd_switch);
             }
-            for (auto *amd_switch : this->amd_switches)
+            for (auto *amd : this->amds)
             {
-                LOG_SWITCH(" ", "AMD_Switch", amd_switch);
+                LOG_SWITCH(" ", "AMD", amd);
             }
         }
 
@@ -100,13 +100,15 @@ namespace esphome
                     uint8_t channels = message[1];
                     for (int i = 0; i < 8; i++)
                     {
-                        for (auto *amd_switch : this->amd_switches)
+                        // Handle switches
+                        for (auto *amd : this->amds)
                         {
-                            if (amd_switch->get_address() == device_id && amd_switch->get_channel() == i)
+                            // Channels are offset for users 1..8
+                            if (amd->get_address() == device_id && amd->get_channel() - 1 == i)
                             {
                                 // Mask the channel and publish states accordingly
                                 bool state = channels & (0x1 << i);
-                                amd_switch->publish_state(state);
+                                amd->publish_state(state);
                             }
                         }
                     }

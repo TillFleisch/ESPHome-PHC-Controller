@@ -2,15 +2,14 @@
 #include "AMD.h"
 
 #define RESEND_TIMEOUT 250
+#define MAX_RESENDS 20
 
 namespace esphome
 {
-    namespace AMD_switch
+    namespace AMD_binary
     {
 
-        static const char *TAG = "AMD.switch";
-        bool target_state = false;
-        long int last_request = 0;
+        static const char *TAG = "AMD";
 
         void AMD::setup()
         {
@@ -19,16 +18,33 @@ namespace esphome
         void AMD::loop()
         {
             bool state = id(this).state;
-            if (state != target_state)
+            if (state != this->target_state)
             {
-                if (millis() - last_request > RESEND_TIMEOUT)
-                    write_state(target_state);
+                // Wait before retransmitting
+                if (millis() - this->last_request > RESEND_TIMEOUT)
+                {
+                    if (resend_counter < MAX_RESENDS)
+                    {
+                        // Try resending as long as possible
+                        int resend = this->resend_counter;
+                        this->write_state(this->target_state);
+                        this->resend_counter = resend + 1;
+                    }
+                    else
+                    {
+                        // Reset the state and log a warning, device cannot be reaced
+                        ESP_LOGW(TAG, "Device not responding! Is the device connected to the bus? (DIP: %i)", address);
+                        this->publish_state(state);
+                        this->write_state(state);
+                    }
+                }
             }
         }
 
         void AMD::write_state(bool state)
         {
-            target_state = state;
+            this->resend_counter = 0;
+            this->target_state = state;
             // We don't publish the state here, we wait for the answer and use the callback to make sure the output acutally switched
 
             // 3 MSBits determine the channel, lower 5 bits are for functionality
@@ -41,7 +57,7 @@ namespace esphome
 
             uart_device->write_array(message, 5);
             uart_device->flush();
-            last_request = millis();
+            this->last_request = millis();
         }
 
         void AMD::dump_config()
@@ -49,5 +65,5 @@ namespace esphome
             ESP_LOGCONFIG(TAG, "AMD DIP-ID: %u\t Channel: %u", address, channel);
         }
 
-    } // namespace AMD_switch
+    } // namespace AMD_binary
 } // namespace esphome
