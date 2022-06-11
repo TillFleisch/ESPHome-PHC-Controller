@@ -6,6 +6,7 @@
 #include "../AMD/AMD.h"
 #include "../EMD/EMD.h"
 #include "../EMD/EMD_light.h"
+#include "../JRM/JRM.h"
 
 namespace esphome
 {
@@ -29,6 +30,11 @@ namespace esphome
         this->emd_lights.push_back(obj);
         obj->set_uart_device(static_cast<uart::UARTDevice *>(this));
       }
+      void register_JRM(JRM_cover::JRM *obj)
+      {
+        this->jmds.push_back(obj);
+        obj->set_uart_device(static_cast<uart::UARTDevice *>(this));
+      }
 
     protected:
       void process_command(uint8_t *device_class_id, uint8_t *message, int *length);
@@ -37,6 +43,7 @@ namespace esphome
       std::vector<AMD_binary::AMD *> amds;
       std::vector<EMD_switch::EMD *> emd_switches;
       std::vector<EMD_light::EMDLight *> emd_lights;
+      std::vector<JRM_cover::JRM *> jmds;
     };
 
   } // namespace phc_controller

@@ -108,7 +108,7 @@ namespace esphome
                 return;
             }
 
-            if (device_class == AMD_MODULE_ADDRESS)
+            if (device_class == AMD_MODULE_ADDRESS || device_class == JRM_MODULE_ADDRESS)
             {
                 // Check for Acknowledgement
                 if (message[0] == 0x00)
@@ -129,6 +129,8 @@ namespace esphome
                         }
                     }
                 }
+
+                send_acknowledgement(*device_class_id);
                 return;
             }
 

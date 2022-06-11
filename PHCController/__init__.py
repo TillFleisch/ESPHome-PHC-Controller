@@ -6,7 +6,7 @@ from esphome.components.uart import UARTComponent
 
 from esphome.const import CONF_ID
 
-AUTO_LOAD = ['light', 'switch', 'AMD', 'EMD']
+AUTO_LOAD = ['cover', 'light', 'switch', 'AMD', 'EMD', 'JRM']
 
 DEPENDENCIES = ['uart']
 
