@@ -42,6 +42,7 @@ namespace esphome
 
     private:
       bool target_state = false;
+      bool toggle = false;
       long int last_request = 0;
       int resend_counter = 0;
 

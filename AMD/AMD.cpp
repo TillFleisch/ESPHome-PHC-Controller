@@ -27,6 +27,7 @@ namespace esphome
                     {
                         // Try resending as long as possible
                         int resend = this->resend_counter;
+                        this->toggle = !this->toggle;
                         this->write_state(this->target_state);
                         this->resend_counter = resend + 1;
                     }
@@ -45,15 +46,17 @@ namespace esphome
         {
             this->resend_counter = 0;
             this->target_state = state;
+            this->toggle = !this->toggle;
             // We don't publish the state here, we wait for the answer and use the callback to make sure the output acutally switched
 
             // 3 MSBits determine the channel, lower 5 bits are for functionality
             uint8_t function = (channel << 5) | (state ? 0x02 : 0x03);
 
-            uint8_t content[3] = {static_cast<uint8_t>(AMD_MODULE_ADDRESS | address), 0x01, function};
-            short crc = util::PHC_CRC(content, 3);
+            uint8_t message[5] = {static_cast<uint8_t>(AMD_MODULE_ADDRESS | address), (toggle ? 0x80 : 0x00) | 0x01, function, 0x00, 0x00};
+            short crc = util::PHC_CRC(message, 3);
 
-            uint8_t message[5] = {static_cast<uint8_t>(AMD_MODULE_ADDRESS | address), 0x01, function, static_cast<uint8_t>(crc & 0xFF), static_cast<uint8_t>((crc & 0xFF00) >> 8)};
+            message[3] = static_cast<uint8_t>(crc & 0xFF);
+            message[4] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
             uart_device->write_array(message, 5);
             uart_device->flush();
