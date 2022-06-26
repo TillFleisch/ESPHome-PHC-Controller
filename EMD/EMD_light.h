@@ -44,6 +44,7 @@ namespace esphome
       bool target_state = false;
       long int last_request = 0;
       int resend_counter = 0;
+      bool toggle = false;
 
       uint8_t address;
       uint8_t channel;

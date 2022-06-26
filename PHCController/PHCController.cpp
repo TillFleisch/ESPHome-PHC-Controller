@@ -70,7 +70,7 @@ namespace esphome
 
         void PHCController::process_command(uint8_t *device_class_id,bool toggle, uint8_t *message, int *length)
         {
-            uint8_t device_id = *device_class_id & 0x1F; // DIP settings (5 LRB)
+            uint8_t device_id = *device_class_id & 0x1F; // DIP settings (5 LSB)
             uint8_t device_class = *device_class_id & 0xE0;
             // EMD
             if (device_class == EMD_MODULE_ADDRESS)
@@ -97,8 +97,6 @@ namespace esphome
                             emd_light->publish_state(!id(emd_light).state);
                         }
                     }
-
-                    return;
                 }
 
                 // Find the switch and set the state
@@ -112,8 +110,6 @@ namespace esphome
                             emd_switch->publish_state(false);
                     }
                 }
-                send_acknowledgement(*device_class_id,toggle);
-                return;
             }
 
             if (device_class == AMD_MODULE_ADDRESS || device_class == JRM_MODULE_ADDRESS)
@@ -144,9 +140,6 @@ namespace esphome
                         }
                     }
                 }
-
-                send_acknowledgement(*device_class_id,toggle);
-                return;
             }
 
             // Send default ack
@@ -156,7 +149,7 @@ namespace esphome
         void PHCController::send_acknowledgement(uint8_t address, bool toggle)
         {
             // TODO: Do we need to flip the toggle bit?
-            uint8_t message[5] = {address, (toggle?0x80:0x00) | 0x01, 0x00, 0x00, 0x00};
+            uint8_t message[5] = {address, static_cast<uint8_t>((toggle?0x80:0x00) | 0x01), 0x00, 0x00, 0x00};
             short crc = util::PHC_CRC(message, 3);
 
             message[3] = static_cast<uint8_t>(crc & 0xFF);
