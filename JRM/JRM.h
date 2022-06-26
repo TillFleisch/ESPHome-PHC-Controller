@@ -23,10 +23,10 @@ namespace esphome
 
         protected:
             void control(const cover::CoverCall &call) override;
-            void write_state(int state);
+            void write_state(cover::CoverOperation state);
             long int last_request = 0;
             int resend_counter = 0;
-            int target_state;
+            cover::CoverOperation target_state;
 
             uint8_t address;
             uint8_t channel;
