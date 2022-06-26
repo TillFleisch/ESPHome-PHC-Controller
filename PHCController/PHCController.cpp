@@ -51,7 +51,7 @@ namespace esphome
                     return;
                 }
 
-                process_command(&address, msg, &length);
+                process_command(&address,toggle , msg, &length);
             }
         }
 
@@ -68,13 +68,21 @@ namespace esphome
             }
         }
 
-        void PHCController::process_command(uint8_t *device_class_id, uint8_t *message, int *length)
+        void PHCController::process_command(uint8_t *device_class_id,bool toggle, uint8_t *message, int *length)
         {
             uint8_t device_id = *device_class_id & 0x1F; // DIP settings (5 LRB)
             uint8_t device_class = *device_class_id & 0xE0;
             // EMD
             if (device_class == EMD_MODULE_ADDRESS)
             {
+                // Initial configuration request message
+                if (message[0] == 0xFF)
+                {
+                    // Configure EMD
+                    send_emd_config(*device_class_id);
+                    return;
+                }
+
                 uint8_t channel = (message[0] & 0xF0) >> 4;
                 uint8_t action = message[0] & 0x0F;
 
@@ -100,16 +108,23 @@ namespace esphome
                     {
                         if (action == 0x02) // ON
                             emd_switch->publish_state(true);
-                        if (action == 0x07) // OFF
+                        if (action == 0x07 || action == 0x03 || action == 0x05) // OFF
                             emd_switch->publish_state(false);
                     }
                 }
-                send_acknowledgement(*device_class_id);
+                send_acknowledgement(*device_class_id,toggle);
                 return;
             }
 
             if (device_class == AMD_MODULE_ADDRESS || device_class == JRM_MODULE_ADDRESS)
             {
+                // Initial configuration request message
+                if (message[0] == 0xFF)
+                {
+                    send_amd_config(*device_class_id);
+                    return;
+                }
+
                 // Check for Acknowledgement
                 if (message[0] == 0x00)
                 {
@@ -120,7 +135,7 @@ namespace esphome
                         for (auto *amd : this->amds)
                         {
                             // Channels are offset for users 1..8
-                            if (amd->get_address() == device_id && amd->get_channel() - 1 == i)
+                            if (amd->get_address() == device_id && amd->get_channel() == i)
                             {
                                 // Mask the channel and publish states accordingly
                                 bool state = channels & (0x1 << i);
@@ -130,23 +145,67 @@ namespace esphome
                     }
                 }
 
-                send_acknowledgement(*device_class_id);
+                send_acknowledgement(*device_class_id,toggle);
                 return;
             }
 
             // Send default ack
-            send_acknowledgement(*device_class_id);
+            send_acknowledgement(*device_class_id,toggle);
         }
 
-        void PHCController::send_acknowledgement(uint8_t address)
+        void PHCController::send_acknowledgement(uint8_t address, bool toggle)
         {
             // TODO: Do we need to flip the toggle bit?
-            uint8_t content[3] = {address, 0x01, 0x00};
-            short crc = util::PHC_CRC(content, 3);
+            uint8_t message[5] = {address, (toggle?0x80:0x00) | 0x01, 0x00, 0x00, 0x00};
+            short crc = util::PHC_CRC(message, 3);
 
-            uint8_t message[5] = {address, 0x01, 0x00, static_cast<uint8_t>(crc & 0xFF), static_cast<uint8_t>((crc & 0xFF00) >> 8)};
+            message[3] = static_cast<uint8_t>(crc & 0xFF);
+            message[4] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
             write_array(message, 5);
+            flush();
+        }
+
+        void PHCController::send_amd_config(uint8_t address)
+        {
+
+            uint8_t message[7] = {address, 0x03, 0xFE, 0x00, 0xFF, 0x00, 0x00};
+
+            short crc = util::PHC_CRC(message, 5);
+            message[5] = static_cast<uint8_t>(crc & 0xFF);
+            message[6] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
+
+            write_array(message, 7);
+            flush();
+        }
+
+        void PHCController::send_emd_config(uint8_t address)
+        {
+            uint8_t message[56] = {0x00};
+            message[0] = address;
+            message[1] = 0x34; // 52 Bytes
+
+            // source: https://github.com/openhab/openhab-addons/blob/da59cdd255a66275dd7ae11dd294fedca4942d30/bundles/org.openhab.binding.phc/src/main/java/org/openhab/binding/phc/internal/handler/PHCBridgeHandler.java
+            int pos = 2;
+
+            message[pos++] = 0xFE;
+            message[pos++] = 0x00; // POR
+
+            message[pos++] = 0x00;
+            message[pos++] = 0x00;
+
+            for (int i = 0; i < 16; i++)
+            { // 16 inputs
+                message[pos++] = ((i << 4) | 0x02);
+                message[pos++] = ((i << 4) | 0x03);
+                message[pos++] = ((i << 4) | 0x05);
+            }
+
+            short crc = util::PHC_CRC(message, 54);
+            message[54] = static_cast<uint8_t>(crc & 0xFF);
+            message[55] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
+
+            write_array(message, 56);
             flush();
         }
 

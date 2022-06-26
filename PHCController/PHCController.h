@@ -37,8 +37,10 @@ namespace esphome
       }
 
     protected:
-      void process_command(uint8_t *device_class_id, uint8_t *message, int *length);
-      void send_acknowledgement(uint8_t address);
+      void process_command(uint8_t *device_class_id, bool toggle, uint8_t *message, int *length);
+      void send_acknowledgement(uint8_t address, bool toggle);
+      void send_amd_config(uint8_t address);
+      void send_emd_config(uint8_t address);
 
       std::vector<AMD_binary::AMD *> amds;
       std::vector<EMD_switch::EMD *> emd_switches;
