@@ -11,11 +11,12 @@ namespace esphome
   namespace EMD_light
   {
 
-    class EMDLight : public switch_::Switch, public Component, public light::LightOutput
+    class EMDLight : public util::Module, public switch_::Switch, public Component, public light::LightOutput
     {
     public:
       void setup() override;
       void loop() override;
+      uint8_t get_device_class_id(){return EMD_MODULE_ADDRESS;};
       void write_state(bool state) override;
       void write_state(light::LightState *state) override
       {
@@ -33,21 +34,12 @@ namespace esphome
         return traits;
       }
 
-      void set_address(uint8_t address) { this->address = address; }
-      void set_channel(uint8_t channel) { this->channel = channel; }
-      void set_uart_device(uart::UARTDevice *uart_device) { this->uart_device = uart_device; };
-
-      uint8_t get_address() { return this->address; }
-      uint8_t get_channel() { return this->channel; }
-
+     void set_uart_device(uart::UARTDevice *uart_device) { this->uart_device = uart_device; };
     private:
       bool target_state = false;
       long int last_request = 0;
       int resend_counter = 0;
-      bool toggle = false;
 
-      uint8_t address;
-      uint8_t channel;
       uart::UARTDevice *uart_device;
     };
 

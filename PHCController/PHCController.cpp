@@ -51,7 +51,7 @@ namespace esphome
                     return;
                 }
 
-                process_command(&address,toggle , msg, &length);
+                process_command(&address, toggle, msg, &length);
             }
         }
 
@@ -68,7 +68,7 @@ namespace esphome
             }
         }
 
-        void PHCController::process_command(uint8_t *device_class_id,bool toggle, uint8_t *message, int *length)
+        void PHCController::process_command(uint8_t *device_class_id, bool toggle, uint8_t *message, int *length)
         {
             uint8_t device_id = *device_class_id & 0x1F; // DIP settings (5 LSB)
             uint8_t device_class = *device_class_id & 0xE0;
@@ -98,16 +98,18 @@ namespace esphome
                         }
                     }
                 }
-
-                // Find the switch and set the state
-                for (auto *emd_switch : this->emd_switches)
+                else
                 {
-                    if (emd_switch->get_address() == device_id && emd_switch->get_channel() == channel)
+                    // Find the switch and set the state
+                    for (auto *emd_switch : this->emd_switches)
                     {
-                        if (action == 0x02) // ON
-                            emd_switch->publish_state(true);
-                        if (action == 0x07 || action == 0x03 || action == 0x05) // OFF
-                            emd_switch->publish_state(false);
+                        if (emd_switch->get_address() == device_id && emd_switch->get_channel() == channel)
+                        {
+                            if (action == 0x02) // ON
+                                emd_switch->publish_state(true);
+                            if (action == 0x07 || action == 0x03 || action == 0x05) // OFF
+                                emd_switch->publish_state(false);
+                        }
                     }
                 }
             }
@@ -127,10 +129,10 @@ namespace esphome
                     uint8_t channels = message[1];
                     for (int i = 0; i < 8; i++)
                     {
-                        // Handle switches
+                        // Handle output switches
                         for (auto *amd : this->amds)
                         {
-                            // Channels are offset for users 1..8
+                            // mask channels
                             if (amd->get_address() == device_id && amd->get_channel() == i)
                             {
                                 // Mask the channel and publish states accordingly
@@ -138,18 +140,33 @@ namespace esphome
                                 amd->publish_state(state);
                             }
                         }
+
+                        // Handle output switches
+                        for (auto *jrm : this->jrms)
+                        {
+                            // mask channels
+                            if (jrm->get_address() == device_id && jrm->get_channel() == i)
+                            {
+                                // Mask the channel and publish states accordingly
+                                bool state = channels & (0x1 << i);
+                                if (state)
+                                    jrm->publish_state(jrm->get_target_state());
+                                else
+                                    jrm->publish_state(cover::CoverOperation::COVER_OPERATION_IDLE);
+                            }
+                        }
                     }
                 }
             }
 
             // Send default ack
-            send_acknowledgement(*device_class_id,toggle);
+            send_acknowledgement(*device_class_id, toggle);
         }
 
         void PHCController::send_acknowledgement(uint8_t address, bool toggle)
         {
             // TODO: Do we need to flip the toggle bit?
-            uint8_t message[5] = {address, static_cast<uint8_t>((toggle?0x80:0x00) | 0x01), 0x00, 0x00, 0x00};
+            uint8_t message[5] = {address, static_cast<uint8_t>((toggle ? 0x80 : 0x00) | 0x01), 0x00, 0x00, 0x00};
             short crc = util::PHC_CRC(message, 3);
 
             message[3] = static_cast<uint8_t>(crc & 0xFF);

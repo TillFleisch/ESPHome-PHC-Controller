@@ -21,5 +21,22 @@ namespace util
             }
         }
         return crc16 ^ 0xFFFF;
+    };
+
+    bool ToggleMap::get_toggle(Module *module)
+    {
+        if (this->toggles.count(module->get_device_class_id()) && this->toggles[module->get_device_class_id()].count(module->get_address()))
+            return this->toggles[module->get_device_class_id()][module->get_address()];
+        return 0;
     }
+
+    void ToggleMap::set_toggle(Module *module, bool new_toggle)
+    {
+        if (!this->toggles.count(module->get_device_class_id()))
+        {
+            this->toggles[module->get_device_class_id()] = std::map<uint8_t, bool>();
+        }
+        this->toggles[module->get_device_class_id()][module->get_address()] = new_toggle;
+    }
+
 }

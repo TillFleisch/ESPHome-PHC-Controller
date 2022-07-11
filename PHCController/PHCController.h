@@ -23,17 +23,24 @@ namespace esphome
       {
         this->amds.push_back(obj);
         obj->set_uart_device(static_cast<uart::UARTDevice *>(this));
+        obj->set_toggle_map(toggle_map);
       }
-      void register_EMD(EMD_switch::EMD *obj) { this->emd_switches.push_back(obj); }
+      void register_EMD(EMD_switch::EMD *obj)
+      {
+        this->emd_switches.push_back(obj);
+        obj->set_toggle_map(toggle_map);
+      }
       void register_EMDLight(EMD_light::EMDLight *obj)
       {
         this->emd_lights.push_back(obj);
         obj->set_uart_device(static_cast<uart::UARTDevice *>(this));
+        obj->set_toggle_map(toggle_map);
       }
       void register_JRM(JRM_cover::JRM *obj)
       {
-        this->jmds.push_back(obj);
+        this->jrms.push_back(obj);
         obj->set_uart_device(static_cast<uart::UARTDevice *>(this));
+        obj->set_toggle_map(toggle_map);
       }
 
     protected:
@@ -42,10 +49,12 @@ namespace esphome
       void send_amd_config(uint8_t address);
       void send_emd_config(uint8_t address);
 
+      util::ToggleMap *toggle_map = new util::ToggleMap();
+
       std::vector<AMD_binary::AMD *> amds;
       std::vector<EMD_switch::EMD *> emd_switches;
       std::vector<EMD_light::EMDLight *> emd_lights;
-      std::vector<JRM_cover::JRM *> jmds;
+      std::vector<JRM_cover::JRM *> jrms;
     };
 
   } // namespace phc_controller

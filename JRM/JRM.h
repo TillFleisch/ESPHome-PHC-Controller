@@ -10,17 +10,16 @@ namespace esphome
     namespace JRM_cover
     {
 
-        class JRM : public cover::Cover, public Component
+        class JRM : public util::Module, public cover::Cover, public Component
         {
         public:
             void setup() override;
             void loop() override;
             void dump_config() override;
+            uint8_t get_device_class_id(){return JRM_MODULE_ADDRESS;};
             cover::CoverTraits get_traits() override;
-            void set_address(uint8_t address) { this->address = address; }
-            void set_channel(uint8_t channel) { this->channel = channel; }
             void set_uart_device(uart::UARTDevice *uart_device) { this->uart_device = uart_device; };
-
+            cover::CoverOperation get_target_state(){return this->target_state;};
         protected:
             void control(const cover::CoverCall &call) override;
             void write_state(cover::CoverOperation state);
@@ -28,8 +27,6 @@ namespace esphome
             int resend_counter = 0;
             cover::CoverOperation target_state;
 
-            uint8_t address;
-            uint8_t channel;
             uart::UARTDevice *uart_device;
         };
 
