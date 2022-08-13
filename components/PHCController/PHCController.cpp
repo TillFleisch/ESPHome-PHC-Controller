@@ -10,6 +10,9 @@ namespace esphome
 
         void PHCController::setup()
         {
+            // Delay setup from here, since bus might be busy from ESP init.
+            delay(500);
+            setup_known_modules();
         }
 
         void PHCController::loop()
@@ -164,6 +167,10 @@ namespace esphome
 
             // Send default ack
             send_acknowledgement(*device_class_id, toggle);
+
+            // Clear the input buffer
+            while (available() > 0)
+                read();
         }
 
         void PHCController::send_acknowledgement(uint8_t address, bool toggle)
@@ -220,6 +227,39 @@ namespace esphome
 
             write_array(message, 56);
             flush();
+        }
+
+        void PHCController::setup_known_modules()
+        {
+            std::vector<uint8_t> addresses;
+            // Collect all EMD Adresses
+            for (auto *emd_switch : this->emd_switches)
+            {
+                if (std::find(addresses.begin(), addresses.end(), EMD_MODULE_ADDRESS | emd_switch->get_address()) == addresses.end())
+                    addresses.push_back(EMD_MODULE_ADDRESS | emd_switch->get_address());
+            }
+
+            // Send all known EMD Configurations
+            for (uint8_t address : addresses)
+                send_emd_config(address);
+
+            addresses.clear();
+
+            // Collect all AMD/JRM Adresses (AMD_MODULE_ADDRESS and JRM_MODULE_ADDRESS are the same)
+            for (auto *amd : this->amds)
+            {
+                if (std::find(addresses.begin(), addresses.end(), AMD_MODULE_ADDRESS | amd->get_address()) == addresses.end())
+                    addresses.push_back(AMD_MODULE_ADDRESS | amd->get_address());
+            }
+            for (auto *jrm : this->jrms)
+            {
+                if (std::find(addresses.begin(), addresses.end(), JRM_MODULE_ADDRESS | jrm->get_address()) == addresses.end())
+                    addresses.push_back(JRM_MODULE_ADDRESS | jrm->get_address());
+            }
+
+            // Send all known AMD Configurations
+            for (uint8_t address : addresses)
+                send_amd_config(address);
         }
 
     } // namespace phc_controller

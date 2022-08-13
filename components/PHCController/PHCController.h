@@ -48,6 +48,7 @@ namespace esphome
       void send_acknowledgement(uint8_t address, bool toggle);
       void send_amd_config(uint8_t address);
       void send_emd_config(uint8_t address);
+      void setup_known_modules();
 
       util::ToggleMap *toggle_map = new util::ToggleMap();
 
