@@ -100,6 +100,9 @@ namespace esphome
                 }
                 else
                 {
+                    // Send extra (speedy) acknowledgement, seems to help
+                    send_acknowledgement(*device_class_id, toggle);
+
                     // Find the switch and set the state
                     for (auto *emd_switch : this->emd_switches)
                     {

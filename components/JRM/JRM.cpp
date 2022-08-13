@@ -80,19 +80,20 @@ namespace esphome
             uint8_t message[message_size] = {0x00};
             if (state == COVER_OPERATION_IDLE)
             {
-                message_size = 3;
+                message_size = 4;
 
                 // 3 MSBits determine the channel, lower 5 bits are for functionality
                 uint8_t function = (channel << 5) | 0x02;
 
                 message[0] = static_cast<uint8_t>(JRM_MODULE_ADDRESS | address);
-                message[1] = static_cast<uint8_t>((this->toggle_map->get_toggle(this) ? 0x80 : 0x00) | 0x01);
+                message[1] = static_cast<uint8_t>((this->toggle_map->get_toggle(this) ? 0x80 : 0x00) | 0x02);
                 message[2] = function;
+                message[3] = 0xFC; // Prio
             }
 
             if (state == COVER_OPERATION_OPENING || state == COVER_OPERATION_CLOSING)
             {
-                message_size = 5;
+                message_size = 6;
 
                 // 3 MSBits determine the channel, lower 5 bits are for functionality
                 uint8_t function = (channel << 5) | (state == COVER_OPERATION_OPENING ? 0x05 : 0x06);
@@ -100,7 +101,7 @@ namespace esphome
                 message[0] = static_cast<uint8_t>(JRM_MODULE_ADDRESS | address);
                 message[1] = static_cast<uint8_t>((this->toggle_map->get_toggle(this) ? 0x80 : 0x00) | 0x04);
                 message[2] = function;
-                message[3] = 0x00; // Prio
+                message[3] = 0xFC; // Prio
                 message[4] = 0xFF; // unigned short time value
                 message[5] = 0xFF; // unigned short time value
             }
