@@ -165,9 +165,6 @@ namespace esphome
                 }
             }
 
-            // Send default ack
-            send_acknowledgement(*device_class_id, toggle);
-
             // Clear the input buffer
             while (available() > 0)
                 read();
@@ -175,14 +172,15 @@ namespace esphome
 
         void PHCController::send_acknowledgement(uint8_t address, bool toggle)
         {
-            // TODO: Do we need to flip the toggle bit?
             uint8_t message[5] = {address, static_cast<uint8_t>((toggle ? 0x80 : 0x00) | 0x01), 0x00, 0x00, 0x00};
             short crc = util::PHC_CRC(message, 3);
 
             message[3] = static_cast<uint8_t>(crc & 0xFF);
             message[4] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            write_array(message, 5);
+            // Send multiple, seems to be more robust
+            for (int i = 0; i < 3; i++)
+                write_array(message, 5);
             flush();
         }
 
