@@ -3,7 +3,6 @@
 #include "esphome/core/component.h"
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/light/light_output.h"
-#include "esphome/components/uart/uart.h"
 #include "../PHCController/util.h"
 
 namespace esphome
@@ -34,14 +33,10 @@ namespace esphome
         return traits;
       }
 
-      void set_uart_device(uart::UARTDevice *uart_device) { this->uart_device = uart_device; };
-
     private:
       bool target_state = false;
       long int last_request = 0;
       int resend_counter = 0;
-
-      uart::UARTDevice *uart_device;
     };
 
   } // namespace AMD_switch

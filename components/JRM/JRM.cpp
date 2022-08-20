@@ -110,8 +110,7 @@ namespace esphome
             message[message_size] = static_cast<uint8_t>(crc & 0xFF);
             message[message_size + 1] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            uart_device->write_array(message, message_size + 2);
-            uart_device->flush();
+            write_array(message, message_size + 2);
             this->last_request = millis();
         }
 
