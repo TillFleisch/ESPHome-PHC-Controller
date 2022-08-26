@@ -48,13 +48,20 @@ namespace esphome
 
                 if (calculated_checksum != msg_checksum)
                 {
-                    ESP_LOGD(TAG, "Recieved bad message (checksum missmatch)");
+                    ESP_LOGW(TAG, "Recieved bad message (checksum missmatch)");
 
+                    // Clear the input buffer
+                    while (available() > 0)
+                        read();
                     // Skip the loop if the checksum is wrong
                     return;
                 }
 
                 process_command(&address, toggle, msg, &length);
+
+                // Clear the input buffer
+                while (available() > 0)
+                    read();
             }
         }
 
@@ -98,8 +105,10 @@ namespace esphome
                         {
                             // since we don't know the state, we toggle the current state
                             emd_light->publish_state(!id(emd_light).state);
+                            return;
                         }
                     }
+                    ESP_LOGI(TAG, "No configuration found for Message from (EMD-Light) Module: [DIP: %i, channel: %i]", device_id, channel);
                 }
                 else
                 {
@@ -115,9 +124,12 @@ namespace esphome
                                 emd_switch->publish_state(true);
                             if (action == 0x07 || action == 0x03 || action == 0x05) // OFF
                                 emd_switch->publish_state(false);
+                            return;
                         }
                     }
+                    ESP_LOGI(TAG, "No configuration found for Message from (EMD) Module: [DIP: %i, channel: %i]", device_id, channel);
                 }
+                return;
             }
 
             if (device_class == AMD_MODULE_ADDRESS || device_class == JRM_MODULE_ADDRESS)
@@ -132,6 +144,7 @@ namespace esphome
                 // Check for Acknowledgement
                 if (message[0] == 0x00)
                 {
+                    bool handled = false;
                     uint8_t channels = message[1];
                     for (int i = 0; i < 8; i++)
                     {
@@ -144,6 +157,7 @@ namespace esphome
                                 // Mask the channel and publish states accordingly
                                 bool state = channels & (0x1 << i);
                                 amd->publish_state(state);
+                                handled = true;
                             }
                         }
 
@@ -159,15 +173,19 @@ namespace esphome
                                     jrm->publish_state(jrm->get_target_state());
                                 else
                                     jrm->publish_state(cover::CoverOperation::COVER_OPERATION_IDLE);
+
+                                handled = true;
                             }
                         }
                     }
+                    if (!handled)
+                        ESP_LOGI(TAG, "No configuration found for Message from (AMD/JRM) Module: [DIP: %i]", device_id);
                 }
+                return;
             }
 
-            // Clear the input buffer
-            while (available() > 0)
-                read();
+            // Send default acknowledgement
+            send_acknowledgement(*device_class_id, toggle);
         }
 
         void PHCController::send_acknowledgement(uint8_t address, bool toggle)
@@ -179,7 +197,7 @@ namespace esphome
             message[4] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
             // Send multiple, seems to be more robust
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i <= 3; i++)
                 write_array(message, 5);
             flush();
         }
