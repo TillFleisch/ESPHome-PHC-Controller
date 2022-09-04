@@ -35,8 +35,23 @@ namespace esphome
                     {
                         // Reset the state and log a warning, device cannot be reaced
                         ESP_LOGW(TAG, "Device not responding! Is the device connected to the bus? (DIP: %i)", address);
+                        this->current_operation = COVER_OPERATION_IDLE;
                         this->publish_state();
                         this->write_state(state);
+                    }
+                }
+            }
+            else
+            {
+                // reset the state to idle after the desired open/close time
+                if (state == COVER_OPERATION_OPENING || state == COVER_OPERATION_CLOSING)
+                {
+                    if (millis() - this->operation_start_time > (state == COVER_OPERATION_OPENING ? this->max_open_time : this->max_close_time) * 100)
+                    {
+                        this->target_state = COVER_OPERATION_IDLE;
+                        this->current_operation = this->target_state;
+                        this->position = (state == COVER_OPERATION_OPENING ? COVER_OPEN : COVER_CLOSED);
+                        this->publish_state();
                     }
                 }
             }
@@ -94,6 +109,7 @@ namespace esphome
             if (state == COVER_OPERATION_OPENING || state == COVER_OPERATION_CLOSING)
             {
                 message_size = 6;
+                this->operation_start_time = millis();
 
                 // 3 MSBits determine the channel, lower 5 bits are for functionality
                 uint8_t function = (channel << 5) | (state == COVER_OPERATION_OPENING ? 0x05 : 0x06);
@@ -101,12 +117,12 @@ namespace esphome
                 message[0] = static_cast<uint8_t>(JRM_MODULE_ADDRESS | address);
                 message[1] = static_cast<uint8_t>((this->toggle_map->get_toggle(this) ? 0x80 : 0x00) | 0x04);
                 message[2] = function;
-                message[3] = 0xFC; // Prio
-                message[4] = 0xFF; // unigned short time value
-                message[5] = 0xFF; // unigned short time value
+                message[3] = 0x07;                                                                                   // Prio
+                message[4] = (state == COVER_OPERATION_OPENING) ? this->max_open_time : this->max_close_time;        // unigned short time value
+                message[5] = ((state == COVER_OPERATION_OPENING) ? this->max_open_time : this->max_close_time) >> 8; // unigned short time value
             }
 
-            short crc = util::PHC_CRC(message, message_size - 2);
+            short crc = util::PHC_CRC(message, message_size);
             message[message_size] = static_cast<uint8_t>(crc & 0xFF);
             message[message_size + 1] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 

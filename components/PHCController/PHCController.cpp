@@ -167,12 +167,10 @@ namespace esphome
                             // mask channels
                             if (jrm->get_address() == device_id && jrm->get_channel() == i)
                             {
-                                // Mask the channel and publish states accordingly
-                                bool state = channels & (0x1 << i);
-                                if (state)
-                                    jrm->publish_state(jrm->get_target_state());
-                                else
-                                    jrm->publish_state(cover::CoverOperation::COVER_OPERATION_IDLE);
+                                // For some reason the cover ack-message does not contain which covers are moving, so we are guessing that the channel has been processed
+                                // This might lead to one cover not moving if 2 are manipulated at the same time
+                                jrm->current_operation = jrm->get_target_state();
+                                jrm->publish_state();
 
                                 handled = true;
                             }
