@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
 #include <stdint.h>
+#include "esphome/core/hal.h"
 
 #define RESEND_TIMEOUT 30
 #define MAX_RESENDS 40
@@ -9,6 +10,13 @@
 #define AMD_MODULE_ADDRESS 0x40
 #define JRM_MODULE_ADDRESS 0x40
 
+namespace esphome
+{
+    namespace phc_controller
+    {
+        class PHCController;
+    }
+}
 namespace util
 {
     unsigned short PHC_CRC(unsigned char *Data, unsigned char NumData);
@@ -45,10 +53,15 @@ namespace util
         uint16_t get_key() { return this->key; }
 
         virtual uint8_t get_device_class_id() = 0;
-        void set_toggle_map(ToggleMap *toggle_map) { this->toggle_map = toggle_map; };
+
+        void set_controller(esphome::phc_controller::PHCController *controller);
+
+        void write_array(const uint8_t *data, size_t len) { this->write_array(this->controller, data, len); };
+        virtual void write_array(esphome::phc_controller::PHCController *controller, const uint8_t *data, size_t len);
 
     protected:
         ToggleMap *toggle_map;
+        esphome::phc_controller::PHCController *controller;
         uint8_t address;
         uint8_t channel;
         uint16_t key = 0;

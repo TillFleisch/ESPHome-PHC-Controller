@@ -56,8 +56,7 @@ namespace esphome
             message[3] = static_cast<uint8_t>(crc & 0xFF);
             message[4] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            uart_device->write_array(message, 5);
-            uart_device->flush();
+            write_array(message, 5);
             this->last_request = millis();
         }
 

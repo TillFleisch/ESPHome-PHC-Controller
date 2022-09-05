@@ -10,6 +10,12 @@ namespace esphome
 
         void PHCController::setup()
         {
+            if (flow_control_pin != NULL)
+            {
+                flow_control_pin->setup();
+                flow_control_pin->digital_write(false);
+            }
+
             // Delay setup from here, since bus might be busy from ESP init.
             delay(500);
             setup_known_modules();
@@ -61,15 +67,17 @@ namespace esphome
         void PHCController::dump_config()
         {
             ESP_LOGCONFIG(TAG, "PHC Controller");
+            if (flow_control_pin != NULL)
+                LOG_PIN("flow_control_pin: ", flow_control_pin);
 
-            for (auto const &emd_switch : this->emd_switches)
+            for (auto const &emd_switch : emd_switches)
             {
                 LOG_SWITCH(" ", "EMD.switch", emd_switch.second);
             }
 
-            for (auto const &emd_switch : this->emd_switches)
+            for (auto const &emd_light : this->emd_lights)
             {
-                LOG_SWITCH(" ", "EMD.light", emd_switch.second);
+                LOG_SWITCH(" ", "EMD.light", emd_light.second);
             }
 
             for (auto const &amd : this->amds)
@@ -193,10 +201,8 @@ namespace esphome
 
             // Send multiple, seems to be more robust
             for (int i = 0; i <= 5; i++)
-            {
                 write_array(message, 5);
-                flush();
-            }
+            
         }
 
         void PHCController::send_amd_config(uint8_t address)
@@ -209,7 +215,6 @@ namespace esphome
             message[6] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
             write_array(message, 7);
-            flush();
         }
 
         void PHCController::send_emd_config(uint8_t address)
@@ -239,7 +244,6 @@ namespace esphome
             message[55] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
             write_array(message, 56);
-            flush();
         }
 
         void PHCController::setup_known_modules()
@@ -274,5 +278,27 @@ namespace esphome
                 send_amd_config(address);
         }
 
+        void PHCController::write_array(const uint8_t *data, size_t len)
+        {
+            // Pull the write pin HIGH
+            if (flow_control_pin != NULL)
+            {
+                flow_control_pin->digital_write(true);
+                delay(FLOW_PIN_PULL_HIGH_DELAY);
+            }
+
+            // Write data to the bus
+            UARTDevice::write_array(data, len);
+
+            // Flush everything out before pulling the flow control pin low
+            UARTDevice::flush();
+
+            // Pull the write pin LOW
+            if (flow_control_pin != NULL)
+            {
+                delay(FLOW_PIN_PULL_LOW_DELAY);
+                flow_control_pin->digital_write(false);
+            }
+        }
     } // namespace phc_controller
 } // namespace esphome
