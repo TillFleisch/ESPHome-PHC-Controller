@@ -23,6 +23,11 @@ namespace util
         return crc16 ^ 0xFFFF;
     };
 
+    uint16_t key(uint8_t address, uint8_t channel)
+    {
+        return address << 8 | channel;
+    }
+
     bool ToggleMap::get_toggle(Module *module)
     {
         if (this->toggles.count(module->get_device_class_id()) && this->toggles[module->get_device_class_id()].count(module->get_address()))

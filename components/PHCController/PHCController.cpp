@@ -50,31 +50,35 @@ namespace esphome
                 {
                     ESP_LOGW(TAG, "Recieved bad message (checksum missmatch)");
 
-                    // Clear the input buffer
-                    while (available() > 0)
-                        read();
                     // Skip the loop if the checksum is wrong
                     return;
                 }
 
                 process_command(&address, toggle, msg, &length);
-
-                // Clear the input buffer
-                while (available() > 0)
-                    read();
             }
         }
 
         void PHCController::dump_config()
         {
             ESP_LOGCONFIG(TAG, "PHC Controller");
-            for (auto *emd_switch : this->emd_switches)
+
+            for (auto const &emd_switch : this->emd_switches)
             {
-                LOG_SWITCH(" ", "EMD.switch", emd_switch);
+                LOG_SWITCH(" ", "EMD.switch", emd_switch.second);
             }
-            for (auto *amd : this->amds)
+
+            for (auto const &emd_switch : this->emd_switches)
             {
-                LOG_SWITCH(" ", "AMD", amd);
+                LOG_SWITCH(" ", "EMD.light", emd_switch.second);
+            }
+
+            for (auto const &amd : this->amds)
+            {
+                LOG_SWITCH(" ", "AMD", amd.second);
+            }
+            for (auto const &jrm : this->jrms)
+            {
+                LOG_COVER(" ", "JRM", jrm.second);
             }
         }
 
@@ -99,14 +103,13 @@ namespace esphome
                 // Handle acknowledgement (such as switch led state)
                 if (action == 0x00)
                 {
-                    for (auto *emd_light : this->emd_lights)
+                    if (this->emd_lights.count(util::key(device_id, channel)))
                     {
-                        if (emd_light->get_address() == device_id && emd_light->get_channel() == channel)
-                        {
-                            // since we don't know the state, we toggle the current state
-                            emd_light->publish_state(!id(emd_light).state);
-                            return;
-                        }
+                        auto *emd_light = emd_lights[util::key(device_id, channel)];
+
+                        // since we don't know the state, we toggle the current state
+                        emd_light->publish_state(!id(emd_light).state);
+                        return;
                     }
                     ESP_LOGI(TAG, "No configuration found for Message from (EMD-Light) Module: [DIP: %i, channel: %i]", device_id, channel);
                 }
@@ -116,17 +119,16 @@ namespace esphome
                     send_acknowledgement(*device_class_id, toggle);
 
                     // Find the switch and set the state
-                    for (auto *emd_switch : this->emd_switches)
+                    if (this->emd_switches.count(util::key(device_id, channel)))
                     {
-                        if (emd_switch->get_address() == device_id && emd_switch->get_channel() == channel)
-                        {
-                            if (action == 0x02) // ON
-                                emd_switch->publish_state(true);
-                            if (action == 0x07 || action == 0x03 || action == 0x05) // OFF
-                                emd_switch->publish_state(false);
-                            return;
-                        }
+                        auto *emd_switch = emd_switches[util::key(device_id, channel)];
+                        if (action == 0x02) // ON
+                            emd_switch->publish_state(true);
+                        if (action == 0x07 || action == 0x03 || action == 0x05) // OFF
+                            emd_switch->publish_state(false);
+                        return;
                     }
+
                     ESP_LOGI(TAG, "No configuration found for Message from (EMD) Module: [DIP: %i, channel: %i]", device_id, channel);
                 }
                 return;
@@ -146,34 +148,29 @@ namespace esphome
                 {
                     bool handled = false;
                     uint8_t channels = message[1];
-                    for (int i = 0; i < 8; i++)
+                    for (uint8_t i = 0; i < 8; i++)
                     {
                         // Handle output switches
-                        for (auto *amd : this->amds)
+                        if (this->amds.count(util::key(device_id, i)))
                         {
-                            // mask channels
-                            if (amd->get_address() == device_id && amd->get_channel() == i)
-                            {
-                                // Mask the channel and publish states accordingly
-                                bool state = channels & (0x1 << i);
-                                amd->publish_state(state);
-                                handled = true;
-                            }
+                            auto *amd = amds[util::key(device_id, i)];
+
+                            // Mask the channel and publish states accordingly
+                            bool state = channels & (0x1 << i);
+                            amd->publish_state(state);
+                            handled = true;
                         }
 
                         // Handle output switches
-                        for (auto *jrm : this->jrms)
+                        if (this->jrms.count(util::key(device_id, i)))
                         {
-                            // mask channels
-                            if (jrm->get_address() == device_id && jrm->get_channel() == i)
-                            {
-                                // For some reason the cover ack-message does not contain which covers are moving, so we are guessing that the channel has been processed
-                                // This might lead to one cover not moving if 2 are manipulated at the same time
-                                jrm->current_operation = jrm->get_target_state();
-                                jrm->publish_state();
+                            auto *jrm = jrms[util::key(device_id, i)];
+                            // For some reason the cover ack-message does not contain which covers are moving, so we are guessing that the channel has been processed
+                            // This might lead to one cover not moving if 2 are manipulated at the same time
+                            jrm->current_operation = jrm->get_target_state();
+                            jrm->publish_state();
 
-                                handled = true;
-                            }
+                            handled = true;
                         }
                     }
                     if (!handled)
@@ -195,9 +192,11 @@ namespace esphome
             message[4] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
             // Send multiple, seems to be more robust
-            for (int i = 0; i <= 3; i++)
+            for (int i = 0; i <= 5; i++)
+            {
                 write_array(message, 5);
-            flush();
+                flush();
+            }
         }
 
         void PHCController::send_amd_config(uint8_t address)
@@ -247,10 +246,10 @@ namespace esphome
         {
             std::vector<uint8_t> addresses;
             // Collect all EMD Adresses
-            for (auto *emd_switch : this->emd_switches)
+
+            for (auto const &module : this->emd_switches)
             {
-                if (std::find(addresses.begin(), addresses.end(), EMD_MODULE_ADDRESS | emd_switch->get_address()) == addresses.end())
-                    addresses.push_back(EMD_MODULE_ADDRESS | emd_switch->get_address());
+                addresses.push_back(EMD_MODULE_ADDRESS | module.first);
             }
 
             // Send all known EMD Configurations
@@ -260,15 +259,14 @@ namespace esphome
             addresses.clear();
 
             // Collect all AMD/JRM Adresses (AMD_MODULE_ADDRESS and JRM_MODULE_ADDRESS are the same)
-            for (auto *amd : this->amds)
+            for (auto const &amd : this->amds)
             {
-                if (std::find(addresses.begin(), addresses.end(), AMD_MODULE_ADDRESS | amd->get_address()) == addresses.end())
-                    addresses.push_back(AMD_MODULE_ADDRESS | amd->get_address());
+                if (std::find(addresses.begin(), addresses.end(), AMD_MODULE_ADDRESS | amd.second->get_address()) == addresses.end())
+                    addresses.push_back(AMD_MODULE_ADDRESS | amd.second->get_address());
             }
-            for (auto *jrm : this->jrms)
+            for (auto const &module : this->jrms)
             {
-                if (std::find(addresses.begin(), addresses.end(), JRM_MODULE_ADDRESS | jrm->get_address()) == addresses.end())
-                    addresses.push_back(JRM_MODULE_ADDRESS | jrm->get_address());
+                addresses.push_back(JRM_MODULE_ADDRESS | module.first);
             }
 
             // Send all known AMD Configurations

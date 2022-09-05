@@ -11,6 +11,7 @@ namespace esphome
 
         void EMD::setup()
         {
+            set_disabled_by_default(true);
         }
 
         void EMD::write_state(bool state)

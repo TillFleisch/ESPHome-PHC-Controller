@@ -28,7 +28,7 @@ def to_code(config):
     yield cg.register_component(var, config)
     yield light.register_light(var, config)
 
-    cg.add(controller.register_AMD(var))
     cg.add(var.set_address(config[ADDRESS]))
     cg.add(var.set_channel(config[CHANNEL]))
     cg.add(var.set_name(config[CONF_NAME]))
+    cg.add(controller.register_AMD(var))

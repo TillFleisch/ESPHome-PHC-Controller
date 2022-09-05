@@ -30,6 +30,7 @@ def to_code(config):
     yield cg.register_component(var, config)
     yield switch.register_switch(var, config)
 
-    cg.add(controller.register_EMD(var))
+    
     cg.add(var.set_address(config[ADDRESS]))
     cg.add(var.set_channel(config[CHANNEL]))
+    cg.add(controller.register_EMD(var))

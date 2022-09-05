@@ -42,8 +42,9 @@ def to_code(config):
     yield cg.register_component(var, config)
     yield cover.register_cover(var, config)
 
-    cg.add(controller.register_JRM(var))
     cg.add(var.set_address(config[ADDRESS]))
     cg.add(var.set_channel(config[CHANNEL]))
     cg.add(var.set_max_close_time(config[MAX_CLOSE_TIME]))
     cg.add(var.set_max_open_time(config[MAX_OPEN_TIME]))
+    cg.add(controller.register_JRM(var))
+
