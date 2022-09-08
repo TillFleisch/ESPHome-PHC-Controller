@@ -15,6 +15,7 @@ namespace esphome
                 flow_control_pin->setup();
                 flow_control_pin->digital_write(false);
             }
+            this->high_freq_.start();
 
             // Delay setup from here, since bus might be busy from ESP init.
             delay(500);
@@ -30,37 +31,35 @@ namespace esphome
                 uint8_t address = read();
 
                 uint8_t toggle_and_length = read();
-                bool toggle = toggle_and_length & 0x80; // Mask the MRB (toggle bit)
-                int length = toggle_and_length & 0x7F;  // Mask everything except for the MRB (message length)
+                bool toggle = toggle_and_length & 0x80;            // Mask the MRB (toggle bit)
+                uint8_t content_length = toggle_and_length & 0x7F; // Mask everything except for the MRB (message length)
 
                 // Read the actual message content
-                uint8_t msg[length];
-                read_array(msg, length);
+                uint8_t msg[content_length + 2];
+                msg[0] = address;
+                msg[1] = toggle_and_length;
+                read_array(msg + 2, content_length + 2); // read content and checksum
 
                 // Read the checksum
-                uint8_t checksum[2];
-                read_array(checksum, 2); // Checksum always consists of 2 bytes
-                short msg_checksum = (short)((checksum[1] << 8) | checksum[0]);
-
-                // Determine the checksum for the message
-                uint8_t concatinated_content[length + 2];
-                concatinated_content[0] = address;
-                concatinated_content[1] = toggle_and_length;
-                for (int i = 0; i < length; i++)
-                    concatinated_content[i + 2] = msg[i];
+                uint16_t msg_checksum = msg[content_length + 3] << 8 | msg[content_length + 2];
 
                 // Validate the checksum
-                short calculated_checksum = util::PHC_CRC(concatinated_content, length + 2);
+                uint16_t calculated_checksum = util::PHC_CRC(msg, content_length + 2); // crc for content and prefix
 
                 if (calculated_checksum != msg_checksum)
                 {
                     ESP_LOGW(TAG, "Recieved bad message (checksum missmatch)");
 
+                    while (int waste = available())
+                    {
+                        uint8_t trash[waste];
+                        read_array(trash, waste);
+                    }
                     // Skip the loop if the checksum is wrong
                     return;
                 }
 
-                process_command(&address, toggle, msg, &length);
+                process_command(&address, toggle, msg + 2, &content_length);
             }
         }
 
@@ -90,7 +89,7 @@ namespace esphome
             }
         }
 
-        void PHCController::process_command(uint8_t *device_class_id, bool toggle, uint8_t *message, int *length)
+        void PHCController::process_command(uint8_t *device_class_id, bool toggle, uint8_t *message, uint8_t *length)
         {
             uint8_t device_id = *device_class_id & 0x1F; // DIP settings (5 LSB)
             uint8_t device_class = *device_class_id & 0xE0;
@@ -100,7 +99,8 @@ namespace esphome
                 // Initial configuration request message
                 if (message[0] == 0xFF)
                 {
-                    // Configure EMD
+                    //  Configure EMD
+                    delayMicroseconds(500);
                     send_emd_config(*device_class_id);
                     return;
                 }
@@ -111,22 +111,31 @@ namespace esphome
                 // Handle acknowledgement (such as switch led state)
                 if (action == 0x00)
                 {
-                    if (this->emd_lights.count(util::key(device_id, channel)))
+                    bool handled = false;
+                    uint8_t channels = message[1];
+                    for (uint8_t i = 0; i < 8; i++)
                     {
-                        auto *emd_light = emd_lights[util::key(device_id, channel)];
+                        if (this->emd_lights.count(util::key(device_id, i)))
+                        {
+                            auto *emd_light = emd_lights[util::key(device_id, i)];
 
-                        // since we don't know the state, we toggle the current state
-                        emd_light->publish_state(!id(emd_light).state);
-                        return;
+                            // Mask the channel and publish states accordingly
+                            bool state = channels & (0x1 << i);
+                            emd_light->publish_state(state);
+
+                            handled = true;
+                        }
                     }
-                    ESP_LOGI(TAG, "No configuration found for Message from (EMD-Light) Module: [DIP: %i, channel: %i]", device_id, channel);
+
+                    if (!handled)
+                        ESP_LOGI(TAG, "No configuration found for Message from (EMD-Light) Module: [DIP: %i, channel: %i]", device_id, channel);
                 }
                 else
                 {
                     // Send extra (speedy) acknowledgement, seems to help
                     send_acknowledgement(*device_class_id, toggle);
 
-                    // Find the switch and set the state
+                    //  Find the switch and set the state
                     if (this->emd_switches.count(util::key(device_id, channel)))
                     {
                         auto *emd_switch = emd_switches[util::key(device_id, channel)];
@@ -147,6 +156,7 @@ namespace esphome
                 // Initial configuration request message
                 if (message[0] == 0xFF)
                 {
+                    delayMicroseconds(500);
                     send_amd_config(*device_class_id);
                     return;
                 }
@@ -188,21 +198,20 @@ namespace esphome
             }
 
             // Send default acknowledgement
+            delayMicroseconds(500);
             send_acknowledgement(*device_class_id, toggle);
         }
 
-        void PHCController::send_acknowledgement(uint8_t address, bool toggle)
+        void inline PHCController::send_acknowledgement(uint8_t address, bool toggle)
         {
             uint8_t message[5] = {address, static_cast<uint8_t>((toggle ? 0x80 : 0x00) | 0x01), 0x00, 0x00, 0x00};
-            short crc = util::PHC_CRC(message, 3);
+            uint16_t crc = util::PHC_CRC(message, 3);
 
             message[3] = static_cast<uint8_t>(crc & 0xFF);
             message[4] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            // Send multiple, seems to be more robust
-            for (int i = 0; i <= 5; i++)
-                write_array(message, 5);
-            
+            delayMicroseconds(500);
+            write_array(message, 5);
         }
 
         void PHCController::send_amd_config(uint8_t address)
@@ -292,6 +301,9 @@ namespace esphome
 
             // Flush everything out before pulling the flow control pin low
             UARTDevice::flush();
+
+            // safety delay to prevent clashing with repsonses
+            delay(1);
 
             // Pull the write pin LOW
             if (flow_control_pin != NULL)

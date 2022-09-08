@@ -19,7 +19,7 @@ namespace esphome
 }
 namespace util
 {
-    unsigned short PHC_CRC(unsigned char *Data, unsigned char NumData);
+    uint16_t PHC_CRC(const uint8_t *Data, int NumData);
     uint16_t key(uint8_t address, uint8_t channel);
     class ToggleMap;
     class Module;

@@ -48,19 +48,20 @@ namespace esphome
       }
 
     protected:
-      void process_command(uint8_t *device_class_id, bool toggle, uint8_t *message, int *length);
+      void process_command(uint8_t *device_class_id, bool toggle, uint8_t *message, uint8_t *length);
       void send_acknowledgement(uint8_t address, bool toggle);
       void send_amd_config(uint8_t address);
       void send_emd_config(uint8_t address);
       void setup_known_modules();
 
+      HighFrequencyLoopRequester high_freq_;
       GPIOPin *flow_control_pin;
       util::ToggleMap *toggle_map = new util::ToggleMap();
 
       std::map<uint16_t, AMD_binary::AMD *> amds;
-      std::map<uint8_t, EMD_switch::EMD *> emd_switches;
-      std::map<uint8_t, EMD_light::EMDLight *> emd_lights;
-      std::map<uint8_t, JRM_cover::JRM *> jrms;
+      std::map<uint16_t, EMD_switch::EMD *> emd_switches;
+      std::map<uint16_t, EMD_light::EMDLight *> emd_lights;
+      std::map<uint16_t, JRM_cover::JRM *> jrms;
     };
 
   } // namespace phc_controller

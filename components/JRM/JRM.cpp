@@ -92,7 +92,7 @@ namespace esphome
 
             int message_size = 6;
 
-            uint8_t message[message_size] = {0x00};
+            uint8_t message[message_size + 2] = {0x00};
             if (state == COVER_OPERATION_IDLE)
             {
                 message_size = 4;
