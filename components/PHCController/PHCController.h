@@ -11,6 +11,8 @@
 #define FLOW_PIN_PULL_HIGH_DELAY 0
 #define FLOW_PIN_PULL_LOW_DELAY 0
 
+#define TIMING_DELAY 1000
+
 namespace esphome
 {
   namespace phc_controller
@@ -31,9 +33,9 @@ namespace esphome
         this->amds[obj->get_key()] = obj;
         obj->set_controller(this);
       }
-      void register_EMD(EMD_switch::EMD *obj)
+      void register_EMD(EMD_binary_sensor::EMD *obj)
       {
-        this->emd_switches[obj->get_key()] = obj;
+        this->emds[obj->get_key()] = obj;
         obj->set_controller(this);
       }
       void register_EMDLight(EMD_light::EMDLight *obj)
@@ -59,7 +61,7 @@ namespace esphome
       util::ToggleMap *toggle_map = new util::ToggleMap();
 
       std::map<uint16_t, AMD_binary::AMD *> amds;
-      std::map<uint16_t, EMD_switch::EMD *> emd_switches;
+      std::map<uint16_t, EMD_binary_sensor::EMD *> emds;
       std::map<uint16_t, EMD_light::EMDLight *> emd_lights;
       std::map<uint16_t, JRM_cover::JRM *> jrms;
     };

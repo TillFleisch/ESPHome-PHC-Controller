@@ -69,9 +69,9 @@ namespace esphome
             if (flow_control_pin != NULL)
                 LOG_PIN("flow_control_pin: ", flow_control_pin);
 
-            for (auto const &emd_switch : emd_switches)
+            for (auto const &emd : emds)
             {
-                LOG_SWITCH(" ", "EMD.switch", emd_switch.second);
+                LOG_BINARY_SENSOR(" ", "EMD.binary_sensor", emd.second);
             }
 
             for (auto const &emd_light : this->emd_lights)
@@ -100,7 +100,7 @@ namespace esphome
                 if (message[0] == 0xFF)
                 {
                     //  Configure EMD
-                    delayMicroseconds(500);
+                    delayMicroseconds(TIMING_DELAY);
                     send_emd_config(*device_class_id);
                     return;
                 }
@@ -136,13 +136,13 @@ namespace esphome
                     send_acknowledgement(*device_class_id, toggle);
 
                     //  Find the switch and set the state
-                    if (this->emd_switches.count(util::key(device_id, channel)))
+                    if (this->emds.count(util::key(device_id, channel)))
                     {
-                        auto *emd_switch = emd_switches[util::key(device_id, channel)];
+                        auto *emd = emds[util::key(device_id, channel)];
                         if (action == 0x02) // ON
-                            emd_switch->publish_state(true);
+                            emd->publish_state(true);
                         if (action == 0x07 || action == 0x03 || action == 0x05) // OFF
-                            emd_switch->publish_state(false);
+                            emd->publish_state(false);
                         return;
                     }
 
@@ -156,7 +156,7 @@ namespace esphome
                 // Initial configuration request message
                 if (message[0] == 0xFF)
                 {
-                    delayMicroseconds(500);
+                    delayMicroseconds(TIMING_DELAY);
                     send_amd_config(*device_class_id);
                     return;
                 }
@@ -198,7 +198,6 @@ namespace esphome
             }
 
             // Send default acknowledgement
-            delayMicroseconds(500);
             send_acknowledgement(*device_class_id, toggle);
         }
 
@@ -210,7 +209,7 @@ namespace esphome
             message[3] = static_cast<uint8_t>(crc & 0xFF);
             message[4] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            delayMicroseconds(500);
+            delayMicroseconds(TIMING_DELAY);
             write_array(message, 5);
         }
 
@@ -260,7 +259,7 @@ namespace esphome
             std::vector<uint8_t> addresses;
             // Collect all EMD Adresses
 
-            for (auto const &module : this->emd_switches)
+            for (auto const &module : this->emds)
             {
                 addresses.push_back(EMD_MODULE_ADDRESS | module.first);
             }
