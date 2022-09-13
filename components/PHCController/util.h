@@ -59,6 +59,13 @@ namespace util
         void write_array(const uint8_t *data, size_t len) { this->write_array(this->controller, data, len); };
         virtual void write_array(esphome::phc_controller::PHCController *controller, const uint8_t *data, size_t len);
 
+        /**
+         * @brief Syncs phc and entity state by forcing an update on the phc sytem.
+         *  This function is mainly used after initializtion as a workaround. The first message might not be answered correctly.
+         *  Sending the assumed known state sould make no phc state change, but fix the first message issue.
+         */
+        virtual void sync_state(){};
+
     protected:
         ToggleMap *toggle_map;
         esphome::phc_controller::PHCController *controller;

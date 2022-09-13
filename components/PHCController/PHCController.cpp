@@ -20,6 +20,7 @@ namespace esphome
             // Delay setup from here, since bus might be busy from ESP init.
             delay(500);
             setup_known_modules();
+            last_message_time_ = millis();
         }
 
         void PHCController::loop()
@@ -59,7 +60,18 @@ namespace esphome
                     return;
                 }
 
+                last_message_time_ = millis();
                 process_command(&address, toggle, msg + 2, &content_length);
+                return;
+            }
+
+            if (!states_synced_)
+            {
+                if (millis() - last_message_time_ > INITIAL_SYNC_DELAY * 1000)
+                {
+                    sync_states();
+                    states_synced_ = true;
+                }
             }
         }
 
@@ -284,6 +296,22 @@ namespace esphome
             // Send all known AMD Configurations
             for (uint8_t address : addresses)
                 send_amd_config(address);
+        }
+
+        void PHCController::sync_states()
+        {
+            for (auto const &emd_light : this->emd_lights)
+            {
+                emd_light.second->sync_state();
+            }
+            for (auto const &amd : this->amds)
+            {
+                amd.second->sync_state();
+            }
+            for (auto const &jrm : this->jrms)
+            {
+                jrm.second->sync_state();
+            }
         }
 
         void PHCController::write_array(const uint8_t *data, size_t len)

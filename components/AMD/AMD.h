@@ -15,7 +15,8 @@ namespace esphome
     public:
       void setup() override;
       void loop() override;
-      uint8_t get_device_class_id(){return AMD_MODULE_ADDRESS;};
+      void sync_state() override { this->write_state(id(this).state); };
+      uint8_t get_device_class_id() { return AMD_MODULE_ADDRESS; };
       void write_state(bool state) override;
       void write_state(light::LightState *state) override
       {

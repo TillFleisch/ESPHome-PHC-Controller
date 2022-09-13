@@ -15,6 +15,7 @@ namespace esphome
             void setup() override;
             void loop() override;
             void dump_config() override;
+            void sync_state() override { this->write_state(id(this).current_operation); };
             uint8_t get_device_class_id() { return JRM_MODULE_ADDRESS; };
             cover::CoverTraits get_traits() override;
             cover::CoverOperation get_target_state() { return this->target_state; };

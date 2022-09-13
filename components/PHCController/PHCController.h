@@ -12,6 +12,7 @@
 #define FLOW_PIN_PULL_LOW_DELAY 0
 
 #define TIMING_DELAY 1000
+#define INITIAL_SYNC_DELAY 5
 
 namespace esphome
 {
@@ -55,6 +56,7 @@ namespace esphome
       void send_amd_config(uint8_t address);
       void send_emd_config(uint8_t address);
       void setup_known_modules();
+      void sync_states();
 
       HighFrequencyLoopRequester high_freq_;
       GPIOPin *flow_control_pin;
@@ -64,6 +66,9 @@ namespace esphome
       std::map<uint16_t, EMD_binary_sensor::EMD *> emds;
       std::map<uint16_t, EMD_light::EMDLight *> emd_lights;
       std::map<uint16_t, JRM_cover::JRM *> jrms;
+
+      long last_message_time_ = 0;
+      bool states_synced_ = false;
     };
 
   } // namespace phc_controller
