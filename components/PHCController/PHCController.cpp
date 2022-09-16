@@ -197,7 +197,8 @@ namespace esphome
                             auto *jrm = jrms[util::key(device_id, i)];
                             // For some reason the cover ack-message does not contain which covers are moving, so we are guessing that the channel has been processed
                             // This might lead to one cover not moving if 2 are manipulated at the same time
-                            jrm->current_operation = jrm->get_target_state();
+
+                            jrm->current_operation = jrm->get_target_operation();
                             jrm->publish_state();
 
                             handled = true;
