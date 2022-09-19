@@ -39,7 +39,7 @@ namespace esphome
         this->emds[obj->get_key()] = obj;
         obj->set_controller(this);
       }
-      void register_EMDLight(EMD_light::EMDLight *obj)
+      void register_EMDLight(EMD_light::EMD_light *obj)
       {
         this->emd_lights[obj->get_key()] = obj;
         obj->set_controller(this);
@@ -64,7 +64,7 @@ namespace esphome
 
       std::map<uint16_t, AMD_binary::AMD *> amds;
       std::map<uint16_t, EMD_binary_sensor::EMD *> emds;
-      std::map<uint16_t, EMD_light::EMDLight *> emd_lights;
+      std::map<uint16_t, EMD_light::EMD_light *> emd_lights;
       std::map<uint16_t, JRM_cover::JRM *> jrms;
 
       long last_message_time_ = 0;

@@ -81,24 +81,10 @@ namespace esphome
             if (flow_control_pin != NULL)
                 LOG_PIN("flow_control_pin: ", flow_control_pin);
 
-            for (auto const &emd : emds)
-            {
-                LOG_BINARY_SENSOR(" ", "EMD.binary_sensor", emd.second);
-            }
-
-            for (auto const &emd_light : this->emd_lights)
-            {
-                LOG_SWITCH(" ", "EMD.light", emd_light.second);
-            }
-
-            for (auto const &amd : this->amds)
-            {
-                LOG_SWITCH(" ", "AMD", amd.second);
-            }
-            for (auto const &jrm : this->jrms)
-            {
-                LOG_COVER(" ", "JRM", jrm.second);
-            }
+            ESP_LOGCONFIG(TAG, "PHC - NR. of  AMD: %i", amds.size());
+            ESP_LOGCONFIG(TAG, "PHC - NR. of  JRM: %i", jrms.size());
+            ESP_LOGCONFIG(TAG, "PHC - NR. of  EMD: %i", emds.size());
+            ESP_LOGCONFIG(TAG, "PHC - NR. of  EMD-Lights: %i", emd_lights.size());
         }
 
         void PHCController::process_command(uint8_t *device_class_id, bool toggle, uint8_t *message, uint8_t *length)
@@ -117,11 +103,8 @@ namespace esphome
                     return;
                 }
 
-                uint8_t channel = (message[0] & 0xF0) >> 4;
-                uint8_t action = message[0] & 0x0F;
-
                 // Handle acknowledgement (such as switch led state)
-                if (action == 0x00)
+                if (message[0] == 0x00)
                 {
                     bool handled = false;
                     uint8_t channels = message[1];
@@ -144,6 +127,9 @@ namespace esphome
                 }
                 else
                 {
+                    uint8_t channel = (message[0] & 0xF0) >> 4;
+                    uint8_t action = message[0] & 0x0F;
+
                     // Send extra (speedy) acknowledgement, seems to help
                     send_acknowledgement(*device_class_id, toggle);
 

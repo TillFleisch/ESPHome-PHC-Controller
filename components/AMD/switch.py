@@ -11,14 +11,14 @@ ADDRESS = 'dip'
 CHANNEL = 'channel'
 
 AMD_ns = cg.esphome_ns.namespace('AMD_binary')
-AMD = AMD_ns.class_('AMD', switch.Switch, cg.Component, light.LightOutput)
+AMD = AMD_ns.class_('AMD_switch', switch.Switch, cg.Component)
 
 CONFIG_SCHEMA = switch.SWITCH_SCHEMA.extend({
     cv.GenerateID(): cv.declare_id(AMD),
     cv.Optional(CONF_DEVICE_CLASS, default=DEVICE_CLASS_OUTLET): cv.string,
     cv.Required(CONTROLLER_ID): cv.use_id(PHCController),
-    cv.Required(ADDRESS): cv.int_,
-    cv.Required(CHANNEL): cv.int_
+    cv.Required(ADDRESS): cv.int_range(min=0, max=31),
+    cv.Required(CHANNEL): cv.int_range(min=0, max=7)
 }).extend(cv.COMPONENT_SCHEMA)
 
 

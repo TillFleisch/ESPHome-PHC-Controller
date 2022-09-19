@@ -16,10 +16,9 @@ EMD = EMD_ns.class_('EMD', binary_sensor.BinarySensor, cg.Component)
 
 CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend({
     cv.GenerateID(): cv.declare_id(EMD),
-    cv.Optional(DEVICE_TYPE, default="switch"): cv.string,
     cv.Required(CONTROLLER_ID): cv.use_id(PHCController),
-    cv.Required(ADDRESS): cv.int_,
-    cv.Required(CHANNEL): cv.int_
+    cv.Required(ADDRESS): cv.int_range(min=0, max=31),
+    cv.Required(CHANNEL): cv.int_range(min=0, max=15)
 
 }).extend(cv.COMPONENT_SCHEMA)
 

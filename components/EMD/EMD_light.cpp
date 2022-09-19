@@ -8,17 +8,16 @@ namespace esphome
     namespace EMD_light
     {
 
-        static const char *TAG = "EMD_Light";
+        static const char *TAG = "EMD_light";
 
-        void EMDLight::setup()
+        void EMD_light::setup()
         {
             set_disabled_by_default(true);
         }
 
-        void EMDLight::loop()
+        void EMD_light::loop()
         {
-            bool state = id(this).state;
-            if (state != this->target_state)
+            if (state_ != this->target_state)
             {
                 // Wait before retransmitting
                 if (millis() - this->last_request > RESEND_TIMEOUT)
@@ -35,14 +34,14 @@ namespace esphome
                     {
                         // Reset the state and log a warning, device cannot be reaced
                         ESP_LOGW(TAG, "Device not responding! Is the device connected to the bus? (DIP: %i)", address);
-                        this->publish_state(state);
-                        this->write_state(state);
+                        this->publish_state(state_);
+                        this->write_state(state_);
                     }
                 }
             }
         }
 
-        void EMDLight::write_state(bool state)
+        void EMD_light::write_state(bool state)
         {
             this->resend_counter = 0;
             this->target_state = state;
@@ -61,9 +60,9 @@ namespace esphome
             this->last_request = millis();
         }
 
-        void EMDLight::dump_config()
+        void EMD_light::dump_config()
         {
-            ESP_LOGCONFIG(TAG, "EMD_Light DIP-ID: %u\t Channel: %u", address, channel);
+            ESP_LOGCONFIG(TAG, "EMD-Light DIP-ID: %u\t Channel: %u", address, channel);
         }
 
     } // namespace EMD_light

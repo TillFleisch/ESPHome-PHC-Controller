@@ -1,7 +1,6 @@
 #include "esphome/core/log.h"
 #include "AMD.h"
 
-
 namespace esphome
 {
     namespace AMD_binary
@@ -15,8 +14,7 @@ namespace esphome
 
         void AMD::loop()
         {
-            bool state = id(this).state;
-            if (state != this->target_state)
+            if (get_state() != this->target_state)
             {
                 // Wait before retransmitting
                 if (millis() - this->last_request > RESEND_TIMEOUT)
@@ -31,10 +29,10 @@ namespace esphome
                     }
                     else
                     {
-                        // Reset the state and log a warning, device cannot be reaced
+                        // Reset the state and log a warning, device cannot be reached
                         ESP_LOGW(TAG, "Device not responding! Is the device connected to the bus? (DIP: %i)", address);
-                        this->publish_state(state);
-                        this->write_state(state);
+                        publish_state(get_state());
+                        write_state(get_state());
                     }
                 }
             }
