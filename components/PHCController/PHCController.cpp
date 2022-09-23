@@ -103,6 +103,7 @@ namespace esphome
                     return;
                 }
 
+                uint8_t channel = (message[0] & 0xF0) >> 4;
                 // Handle acknowledgement (such as switch led state)
                 if (message[0] == 0x00)
                 {
@@ -127,7 +128,6 @@ namespace esphome
                 }
                 else
                 {
-                    uint8_t channel = (message[0] & 0xF0) >> 4;
                     uint8_t action = message[0] & 0x0F;
 
                     // Send extra (speedy) acknowledgement, seems to help
