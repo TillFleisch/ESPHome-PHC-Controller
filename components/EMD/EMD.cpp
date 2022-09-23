@@ -12,6 +12,7 @@ namespace esphome
         void EMD::setup()
         {
             set_disabled_by_default(true);
+            publish_initial_state(false);
         }
 
         void EMD::dump_config()
