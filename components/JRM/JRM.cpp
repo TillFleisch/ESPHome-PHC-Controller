@@ -126,8 +126,11 @@ namespace esphome
             }
             else
             {
-                target_position_ = position;
+                // Ignore no change in position
+                if (position == this->position)
+                    return;
 
+                target_position_ = position;
                 bool open = (operation_start_position_ < position);
                 // Use max open/close time to ensure the covers will reach the desired positions
                 if (position == COVER_OPEN)
