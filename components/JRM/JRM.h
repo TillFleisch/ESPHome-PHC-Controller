@@ -18,9 +18,15 @@ namespace esphome
             void setup() override;
             void loop() override;
             void dump_config() override;
-            void sync_state() override { write_state(id(this).current_operation, target_position_); };
+            void sync_state() override { write_state(current_operation, target_position_); };
             uint8_t get_device_class_id() { return JRM_MODULE_ADDRESS; };
             cover::CoverTraits get_traits() override;
+
+            /**
+             * @brief Get the target operation of this JRM entity
+             *
+             * @return cover::CoverOperation
+             */
             cover::CoverOperation get_target_operation() { return target_operation_; };
 
             /**
@@ -89,7 +95,18 @@ namespace esphome
             {
                 this->position = assume_position_ ? position : (position > 0.5f ? cover::COVER_OPEN : cover::COVER_CLOSED);
             }
+            /**
+             * @brief The max time the cover is allowed to move while opening.
+             * This value should guarantee that the cover reaches the opened position.
+             *
+             */
             uint16_t max_open_time_ = 65535;
+
+            /**
+             * @brief The max time the cover is allowed to move while closing.
+             * This value should guarantee that the cover reaches the closed position.
+             *
+             */
             uint16_t max_close_time_ = 65535;
             /**
              * @brief The time it takes for the cover to reach the OPEN state from being fully CLOSED.
@@ -107,6 +124,11 @@ namespace esphome
              *
              */
             bool assume_position_ = false;
+
+            /**
+             * @brief Timestamp of the last request.
+             *
+             */
             long int last_request_ = 0;
 
             /**

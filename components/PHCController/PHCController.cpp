@@ -10,12 +10,12 @@ namespace esphome
 
         void PHCController::setup()
         {
-            if (flow_control_pin != NULL)
+            if (flow_control_pin_ != NULL)
             {
-                flow_control_pin->setup();
-                flow_control_pin->digital_write(false);
+                flow_control_pin_->setup();
+                flow_control_pin_->digital_write(false);
             }
-            this->high_freq_.start();
+            high_freq_.start();
 
             // Delay setup from here, since bus might be busy from ESP init.
             delay(500);
@@ -78,13 +78,13 @@ namespace esphome
         void PHCController::dump_config()
         {
             ESP_LOGCONFIG(TAG, "PHC Controller");
-            if (flow_control_pin != NULL)
-                LOG_PIN("flow_control_pin: ", flow_control_pin);
+            if (flow_control_pin_ != NULL)
+                LOG_PIN("flow_control_pin: ", flow_control_pin_);
 
-            ESP_LOGCONFIG(TAG, "PHC - NR. of  AMD: %i", amds.size());
-            ESP_LOGCONFIG(TAG, "PHC - NR. of  JRM: %i", jrms.size());
-            ESP_LOGCONFIG(TAG, "PHC - NR. of  EMD: %i", emds.size());
-            ESP_LOGCONFIG(TAG, "PHC - NR. of  EMD-Lights: %i", emd_lights.size());
+            ESP_LOGCONFIG(TAG, "PHC - NR. of  AMD: %i", amds_.size());
+            ESP_LOGCONFIG(TAG, "PHC - NR. of  JRM: %i", jrms_.size());
+            ESP_LOGCONFIG(TAG, "PHC - NR. of  EMD: %i", emds_.size());
+            ESP_LOGCONFIG(TAG, "PHC - NR. of  EMD-Lights: %i", emd_lights_.size());
         }
 
         void PHCController::process_command(uint8_t *device_class_id, bool toggle, uint8_t *message, uint8_t *length)
@@ -111,9 +111,9 @@ namespace esphome
                     uint8_t channels = message[1];
                     for (uint8_t i = 0; i < 8; i++)
                     {
-                        if (this->emd_lights.count(util::key(device_id, i)))
+                        if (emd_lights_.count(util::key(device_id, i)))
                         {
-                            auto *emd_light = emd_lights[util::key(device_id, i)];
+                            auto *emd_light = emd_lights_[util::key(device_id, i)];
 
                             // Mask the channel and publish states accordingly
                             bool state = channels & (0x1 << i);
@@ -134,9 +134,9 @@ namespace esphome
                     send_acknowledgement(*device_class_id, toggle);
 
                     //  Find the switch and set the state
-                    if (this->emds.count(util::key(device_id, channel)))
+                    if (emds_.count(util::key(device_id, channel)))
                     {
-                        auto *emd = emds[util::key(device_id, channel)];
+                        auto *emd = emds_[util::key(device_id, channel)];
                         if (action == 0x02) // ON
                             emd->publish_state(true);
                         if (action == 0x07 || action == 0x03 || action == 0x05) // OFF
@@ -167,9 +167,9 @@ namespace esphome
                     for (uint8_t i = 0; i < 8; i++)
                     {
                         // Handle output switches
-                        if (this->amds.count(util::key(device_id, i)))
+                        if (amds_.count(util::key(device_id, i)))
                         {
-                            auto *amd = amds[util::key(device_id, i)];
+                            auto *amd = amds_[util::key(device_id, i)];
 
                             // Mask the channel and publish states accordingly
                             bool state = channels & (0x1 << i);
@@ -178,9 +178,9 @@ namespace esphome
                         }
 
                         // Handle output switches
-                        if (this->jrms.count(util::key(device_id, i)))
+                        if (jrms_.count(util::key(device_id, i)))
                         {
-                            auto *jrm = jrms[util::key(device_id, i)];
+                            auto *jrm = jrms_[util::key(device_id, i)];
                             // For some reason the cover ack-message does not contain which covers are moving, so we are guessing that the channel has been processed
                             // This might lead to one cover not moving if 2 are manipulated at the same time
 
@@ -258,7 +258,7 @@ namespace esphome
             std::vector<uint8_t> addresses;
             // Collect all EMD Adresses
 
-            for (auto const &module : this->emds)
+            for (auto const &module : emds_)
             {
                 addresses.push_back(EMD_MODULE_ADDRESS | module.first);
             }
@@ -270,12 +270,12 @@ namespace esphome
             addresses.clear();
 
             // Collect all AMD/JRM Adresses (AMD_MODULE_ADDRESS and JRM_MODULE_ADDRESS are the same)
-            for (auto const &amd : this->amds)
+            for (auto const &amd : amds_)
             {
                 if (std::find(addresses.begin(), addresses.end(), AMD_MODULE_ADDRESS | amd.second->get_address()) == addresses.end())
                     addresses.push_back(AMD_MODULE_ADDRESS | amd.second->get_address());
             }
-            for (auto const &module : this->jrms)
+            for (auto const &module : jrms_)
             {
                 addresses.push_back(JRM_MODULE_ADDRESS | module.first);
             }
@@ -287,15 +287,15 @@ namespace esphome
 
         void PHCController::sync_states()
         {
-            for (auto const &emd_light : this->emd_lights)
+            for (auto const &emd_light : emd_lights_)
             {
                 emd_light.second->sync_state();
             }
-            for (auto const &amd : this->amds)
+            for (auto const &amd : amds_)
             {
                 amd.second->sync_state();
             }
-            for (auto const &jrm : this->jrms)
+            for (auto const &jrm : jrms_)
             {
                 jrm.second->sync_state();
             }
@@ -304,9 +304,9 @@ namespace esphome
         void PHCController::write_array(const uint8_t *data, size_t len)
         {
             // Pull the write pin HIGH
-            if (flow_control_pin != NULL)
+            if (flow_control_pin_ != NULL)
             {
-                flow_control_pin->digital_write(true);
+                flow_control_pin_->digital_write(true);
                 delay(FLOW_PIN_PULL_HIGH_DELAY);
             }
 
@@ -320,10 +320,10 @@ namespace esphome
             delay(1);
 
             // Pull the write pin LOW
-            if (flow_control_pin != NULL)
+            if (flow_control_pin_ != NULL)
             {
                 delay(FLOW_PIN_PULL_LOW_DELAY);
-                flow_control_pin->digital_write(false);
+                flow_control_pin_->digital_write(false);
             }
         }
     } // namespace phc_controller

@@ -117,7 +117,7 @@ namespace esphome
         {
             resend_counter_ = 0;
             target_operation_ = operation;
-            operation_start_position_ = id(this).position;
+            operation_start_position_ = this->position;
             toggle_map->flip_toggle(this);
 
             if (operation == COVER_OPERATION_IDLE)

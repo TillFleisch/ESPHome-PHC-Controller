@@ -9,6 +9,11 @@ namespace esphome
   namespace EMD_binary_sensor
   {
 
+    /**
+     * @brief binary sensor implementation of a EMD module.
+     * This class does not implement any functionality, as the phc controller changes this entities state.
+     *
+     */
     class EMD : public util::Module, public binary_sensor::BinarySensor, public Component
     {
     public:

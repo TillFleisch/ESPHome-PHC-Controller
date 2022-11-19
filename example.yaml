@@ -1,0 +1,67 @@
+esphome:
+  name: phc-test
+
+# Load components via Github
+external_components:
+  - source: github://TillFleisch/ESPHome-PHC-Controller@main
+
+# Define UART bus connected to the RS-485 adapter with bus parameters
+uart:
+  id: bus
+  tx_pin: TX
+  rx_pin: RX
+  baud_rate: 19200
+  stop_bits: 2
+
+# create PHC-controller
+PHCController:
+  id: controller1
+  uart_id: bus
+
+switch:
+  # AMD output as a switch entity (i.e. Outlet)
+  - platform: AMD
+    name: Living Room Outlet
+    phc_controller_id: controller1
+    dip: 6
+    channel: 4
+
+light:
+  # AMD output as a light
+  - platform: AMD
+    name: Living Room
+    phc_controller_id: controller1
+    dip: 6
+    channel: 5
+
+  # EMD LED-output as a light entity
+  - platform: EMD
+    name: Office Feedback Light
+    phc_controller_id: controller1
+    dip: 2
+    channel: 3
+
+binary_sensor:
+
+  # EMD input as a binary sensor
+  - platform: EMD
+    name: Office Light Switch
+    phc_controller_id: controller1
+    dip: 6
+    channel: 5
+
+cover:
+  # Cover entity
+  - platform: JRM
+    name: Kitchen
+    phc_controller_id: controller1
+    dip: 0
+    channel: 0
+    max_open_time: 35s
+    max_close_time: 30s
+    # Assume cover position (optional)
+    assume_position:
+      open_time: 30s
+      close_time: 25s
+
+
