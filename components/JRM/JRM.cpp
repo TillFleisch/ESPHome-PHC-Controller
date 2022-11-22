@@ -9,6 +9,9 @@ namespace esphome
         using namespace cover;
 
         static const char *TAG = "JRM.cover";
+        std::random_device rd;
+        std::mt19937 rng(rd());
+        std::uniform_int_distribution<int> jitter(0, 10);
 
         void JRM::setup()
         {
@@ -23,6 +26,8 @@ namespace esphome
                 // Wait before retransmitting
                 if (millis() - last_request_ > RESEND_TIMEOUT)
                 {
+                    // Add a little jitter
+                    delay(jitter(rng));
                     if (resend_counter_ < MAX_RESENDS)
                     {
                         // Try resending as long as possible, double flip toggle
@@ -189,7 +194,7 @@ namespace esphome
             message[4] = static_cast<uint8_t>(crc & 0xFF);
             message[5] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            write_array(message, 6);
+            write_array(message, 6, false);
         }
 
         void JRM::write_move_operation(uint8_t &address, uint8_t &channel, uint16_t &time, bool open)
@@ -210,7 +215,7 @@ namespace esphome
             message[6] = static_cast<uint8_t>(crc & 0xFF);
             message[7] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            write_array(message, 8);
+            write_array(message, 8, true);
         }
 
     } // namespace empty_cover

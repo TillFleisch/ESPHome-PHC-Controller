@@ -7,6 +7,9 @@ namespace esphome
     {
 
         static const char *TAG = "EMD_light";
+        std::random_device rd;
+        std::mt19937 rng(rd());
+        std::uniform_int_distribution<int> jitter(0, 10);
 
         void EMD_light::setup()
         {
@@ -20,6 +23,8 @@ namespace esphome
                 // Wait before retransmitting
                 if (millis() - last_request > RESEND_TIMEOUT)
                 {
+                    // Add a little jitter
+                    delay(jitter(rng));
                     if (resend_counter < MAX_RESENDS)
                     {
                         // Try resending as long as possible
@@ -46,7 +51,7 @@ namespace esphome
             toggle_map->flip_toggle(this);
 
             // 4 MSBits determine the channel, lower 4 bits are for functionality
-            uint8_t function = (channel << 4) | (state ? 0x02 : 0x03);
+            uint8_t function = (channel << 4) | (this->target_state ? 0x02 : 0x03);
 
             uint8_t message[5] = {static_cast<uint8_t>(EMD_MODULE_ADDRESS | address), static_cast<uint8_t>((toggle_map->get_toggle(this) ? 0x80 : 0x00) | 0x01), function, 0x00, 0x00};
             short crc = util::PHC_CRC(message, 3);
@@ -54,7 +59,7 @@ namespace esphome
             message[3] = static_cast<uint8_t>(crc & 0xFF);
             message[4] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            write_array(message, 5);
+            write_array(message, 5, true);
             last_request = millis();
         }
 

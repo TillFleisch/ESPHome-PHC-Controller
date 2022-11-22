@@ -147,8 +147,9 @@ namespace util
          *
          * @param data Data to write to the bus
          * @param len Length of the given data
+         * @param allow_weak_operation If true writing to the bus is not guaranteed
          */
-        void write_array(const uint8_t *data, size_t len) { write_array(controller, data, len); };
+        void write_array(const uint8_t *data, size_t len, bool allow_weak_operation) { write_array(controller, data, len, allow_weak_operation); };
 
         /**
          * @brief Writes a array of bytes to the PHC-bus using the provided parent controller.
@@ -156,8 +157,9 @@ namespace util
          * @param controller The parent controller to which this module belongs
          * @param data Data to write to the bus
          * @param len Length of the given data
+         * @param allow_weak_operation If true writing to the bus is not guaranteed
          */
-        virtual void write_array(esphome::phc_controller::PHCController *controller, const uint8_t *data, size_t len);
+        virtual void write_array(esphome::phc_controller::PHCController *controller, const uint8_t *data, size_t len, bool allow_weak_operation);
 
         /**
          * @brief Syncs phc and entity state by forcing an update on the phc sytem.

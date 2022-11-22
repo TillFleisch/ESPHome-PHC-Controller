@@ -183,10 +183,14 @@ namespace esphome
                             auto *jrm = jrms_[util::key(device_id, i)];
                             // For some reason the cover ack-message does not contain which covers are moving, so we are guessing that the channel has been processed
                             // This might lead to one cover not moving if 2 are manipulated at the same time
-
-                            jrm->current_operation = jrm->get_target_operation();
-                            jrm->publish_state();
-
+                            // Only accepting a single change will increase the chance of correct acknowledgement
+                            if (jrm->current_operation != jrm->get_target_operation())
+                            {
+                                jrm->current_operation = jrm->get_target_operation();
+                                jrm->publish_state();
+                                handled = true;
+                                break;
+                            }
                             handled = true;
                         }
                     }
@@ -209,11 +213,12 @@ namespace esphome
             message[4] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
             delayMicroseconds(TIMING_DELAY);
-            write_array(message, 5);
+            write_array(message, 5, true);
         }
 
         void PHCController::send_amd_config(uint8_t address)
         {
+            ESP_LOGI(TAG, "Configuring Module (AMD/JRM): [DIP: %i]", address);
 
             uint8_t message[7] = {address, 0x03, 0xFE, 0x00, 0xFF, 0x00, 0x00};
 
@@ -221,11 +226,12 @@ namespace esphome
             message[5] = static_cast<uint8_t>(crc & 0xFF);
             message[6] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            write_array(message, 7);
+            write_array(message, 7, false);
         }
 
         void PHCController::send_emd_config(uint8_t address)
         {
+            ESP_LOGI(TAG, "Configuring Module (EMD): [DIP: %i]", address);
             uint8_t message[56] = {0x00};
             message[0] = address;
             message[1] = 0x34; // 52 Bytes
@@ -250,7 +256,7 @@ namespace esphome
             message[54] = static_cast<uint8_t>(crc & 0xFF);
             message[55] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            write_array(message, 56);
+            write_array(message, 56, false);
         }
 
         void PHCController::setup_known_modules()
@@ -290,19 +296,27 @@ namespace esphome
             for (auto const &emd_light : emd_lights_)
             {
                 emd_light.second->sync_state();
+                delay(40);
             }
             for (auto const &amd : amds_)
             {
                 amd.second->sync_state();
+                delay(40);
             }
             for (auto const &jrm : jrms_)
             {
                 jrm.second->sync_state();
+                delay(40);
             }
         }
 
-        void PHCController::write_array(const uint8_t *data, size_t len)
+        void PHCController::write_array(const uint8_t *data, size_t len, bool allow_weak_operation)
         {
+
+            // skip writing if the bus is busy and rely on retransmits
+            if (allow_weak_operation && available())
+                return;
+
             // Pull the write pin HIGH
             if (flow_control_pin_ != NULL)
             {

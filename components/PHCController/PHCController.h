@@ -12,7 +12,7 @@
 #define FLOW_PIN_PULL_LOW_DELAY 0
 
 #define TIMING_DELAY 1000
-#define INITIAL_SYNC_DELAY 5
+#define INITIAL_SYNC_DELAY 15
 
 namespace esphome
 {
@@ -30,8 +30,9 @@ namespace esphome
        *
        * @param data Data to write to the bus
        * @param len Length of the given data
+       * @param allow_weak_operation If true writing to the bus is not guaranteed
        */
-      void write_array(const uint8_t *data, size_t len);
+      void write_array(const uint8_t *data, size_t len, bool allow_weak_operation);
       float get_setup_priority() const override { return setup_priority::HARDWARE; }
 
       /**
@@ -136,49 +137,49 @@ namespace esphome
 
       /**
        * @brief The flow control pin used by this controller
-       * 
+       *
        */
       GPIOPin *flow_control_pin_;
 
       /**
        * @brief The toggle map used by this controller
-       * 
+       *
        */
       util::ToggleMap *toggle_map = new util::ToggleMap();
 
       /**
        * @brief A Map of available AMD entities
-       * 
+       *
        */
       std::map<uint16_t, AMD_binary::AMD *> amds_;
 
       /**
        * @brief A Map of available EMD entities
-       * 
+       *
        */
       std::map<uint16_t, EMD_binary_sensor::EMD *> emds_;
 
-       /**
+      /**
        * @brief A Map of available EMD_light entities
-       * 
+       *
        */
       std::map<uint16_t, EMD_light::EMD_light *> emd_lights_;
 
-       /**
+      /**
        * @brief A Map of available JRM entities
-       * 
+       *
        */
       std::map<uint16_t, JRM_cover::JRM *> jrms_;
 
       /**
        * @brief Time since the last message has been received.
-       * 
+       *
        */
       long last_message_time_ = 0;
 
       /**
        * @brief Determines if states have been synced on start-up.
-       * 
+       *
        */
       bool states_synced_ = false;
     };
@@ -192,7 +193,7 @@ inline void util::Module::set_controller(esphome::phc_controller::PHCController 
   toggle_map = controller->getToggleMap();
 }
 
-inline void util::Module::write_array(esphome::phc_controller::PHCController *controller, const uint8_t *data, size_t len)
+inline void util::Module::write_array(esphome::phc_controller::PHCController *controller, const uint8_t *data, size_t len, bool allow_weak_operation)
 {
-  controller->write_array(data, len);
+  controller->write_array(data, len, allow_weak_operation);
 };

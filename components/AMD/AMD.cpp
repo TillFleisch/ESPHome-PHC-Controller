@@ -7,6 +7,9 @@ namespace esphome
     {
 
         static const char *TAG = "AMD";
+        std::random_device rd;
+        std::mt19937 rng(rd());
+        std::uniform_int_distribution<int> jitter(0, 10);
 
         void AMD::setup()
         {
@@ -19,6 +22,8 @@ namespace esphome
                 // Wait before retransmitting
                 if (millis() - last_request > RESEND_TIMEOUT)
                 {
+                    // Add a little jitter
+                    delay(jitter(rng));
                     if (resend_counter < MAX_RESENDS)
                     {
                         // Try resending as long as possible
@@ -54,7 +59,7 @@ namespace esphome
             message[3] = static_cast<uint8_t>(crc & 0xFF);
             message[4] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            write_array(message, 5);
+            write_array(message, 5, true);
             last_request = millis();
         }
 
