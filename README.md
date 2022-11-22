@@ -2,12 +2,16 @@
 
 This project implements a PHC Controller which integrates into [Home Assistant](https://home-assistant.io) through [ESPHome](https://esphome.io). This could replace a existing dumb controller (STM - Steuermodul), thus smartifying a existing Phea PHC installation.
 
+# Demo installation
+![Smart PHC controller with Modules](smart_phc.jpg)
+Smart PHC controller with PHC-Modules. A close up of the board containing the ESP32 with the RS-485 converter and a step-down module can be found [here](esp_board.jpg).
+
 # Requirements
 
 This project has been developed and tested on a ESP32. A ESP8266 is probably going to work just fine.
 
 The PHC-Bus is RS-485 based. In order communicate on the bus a RS-485 TTL Adapter is required. Currently only a Chip with automatic flow control has been tested.
-Connect the A/B wires to the PHC-bus. This can easily be done using the screw-terminal on power-supply.
+Connect the A/B wires to the PHC-bus. This can easily be done using the screw-terminal on the power-supply ([see](power_supply.jpg)).
 Finally connect the RS-485 adapter to your ESP and you are good to go.
 
 With the help of a step-down module/voltage converter the 24V supplied by the PHC-power-supply can be used to power the ESP.
@@ -16,6 +20,8 @@ Make sure to remove any
 existing controllers (STM - Steuermodul) from the bus, as they will interfere. 
 
 # Configuration variables
+
+A example configuration can be found [here](example.yaml)
 
 ## PHC Controller
 - **id**(**Required**, string): Controller ID which will be used for entity configuration.
@@ -59,7 +65,7 @@ existing controllers (STM - Steuermodul) from the bus, as they will interfere.
 
 
 # Related work
-Without previous reverse engineering work done by others this whould have been a lot more time consuming.
+Without previous reverse engineering work done by others this would have been a lot more time consuming.
 
 - [PHC-Protokoll](https://www.phc-forum.de/media/kunena/attachments/253/PHC-Protokoll.pdf)
 - [Openhab PHC](https://github.com/openhab/openhab-addons/blob/da59cdd255a66275dd7ae11dd294fedca4942d30/bundles/org.openhab.binding.phc/src/main/java/org/openhab/binding/phc/internal/handler/PHCBridgeHandler.java)
@@ -68,6 +74,5 @@ Without previous reverse engineering work done by others this whould have been a
 - The UART debug function can be used to analyze communication on the bus.
 - Kown Memory Issues:
     - ESP8266 out-of-memory exception
-    - meditating-guru? exception caused by `LOOP_STACK_SIZE` exceeded
-        - solved link 
-    - 
+    - Guru Meditation Error: exception caused by `LOOP_STACK_SIZE` exceeded
+        - [solution](https://community.platformio.org/t/esp32-stack-configuration-reloaded/20994/2)
