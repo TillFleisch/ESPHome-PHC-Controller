@@ -99,7 +99,7 @@ namespace esphome
                 {
                     //  Configure EMD
                     delayMicroseconds(TIMING_DELAY);
-                    send_emd_config(*device_class_id);
+                    send_emd_config(device_id);
                     return;
                 }
 
@@ -155,7 +155,7 @@ namespace esphome
                 if (message[0] == 0xFF)
                 {
                     delayMicroseconds(TIMING_DELAY);
-                    send_amd_config(*device_class_id);
+                    send_amd_config(device_id);
                     return;
                 }
 
@@ -216,11 +216,11 @@ namespace esphome
             write_array(message, 5, true);
         }
 
-        void PHCController::send_amd_config(uint8_t address)
+        void PHCController::send_amd_config(uint8_t id)
         {
-            ESP_LOGI(TAG, "Configuring Module (AMD/JRM): [DIP: %i]", address);
+            ESP_LOGI(TAG, "Configuring Module (AMD/JRM): [DIP: %i]", id);
 
-            uint8_t message[7] = {address, 0x03, 0xFE, 0x00, 0xFF, 0x00, 0x00};
+            uint8_t message[7] = {AMD_MODULE_ADDRESS | id, 0x03, 0xFE, 0x00, 0xFF, 0x00, 0x00};
 
             short crc = util::PHC_CRC(message, 5);
             message[5] = static_cast<uint8_t>(crc & 0xFF);
@@ -229,11 +229,11 @@ namespace esphome
             write_array(message, 7, false);
         }
 
-        void PHCController::send_emd_config(uint8_t address)
+        void PHCController::send_emd_config(uint8_t id)
         {
-            ESP_LOGI(TAG, "Configuring Module (EMD): [DIP: %i]", address);
+            ESP_LOGI(TAG, "Configuring Module (EMD): [DIP: %i]", id);
             uint8_t message[56] = {0x00};
-            message[0] = address;
+            message[0] = EMD_MODULE_ADDRESS | id;
             message[1] = 0x34; // 52 Bytes
 
             // source: https://github.com/openhab/openhab-addons/blob/da59cdd255a66275dd7ae11dd294fedca4942d30/bundles/org.openhab.binding.phc/src/main/java/org/openhab/binding/phc/internal/handler/PHCBridgeHandler.java
@@ -266,7 +266,8 @@ namespace esphome
 
             for (auto const &module : emds_)
             {
-                addresses.push_back(EMD_MODULE_ADDRESS | module.first);
+                if (std::find(addresses.begin(), addresses.end(), module.second->get_address()) == addresses.end())
+                    addresses.push_back(module.first);
             }
 
             // Send all known EMD Configurations
@@ -276,14 +277,15 @@ namespace esphome
             addresses.clear();
 
             // Collect all AMD/JRM Adresses (AMD_MODULE_ADDRESS and JRM_MODULE_ADDRESS are the same)
-            for (auto const &amd : amds_)
+            for (auto const &module : amds_)
             {
-                if (std::find(addresses.begin(), addresses.end(), AMD_MODULE_ADDRESS | amd.second->get_address()) == addresses.end())
-                    addresses.push_back(AMD_MODULE_ADDRESS | amd.second->get_address());
+                if (std::find(addresses.begin(), addresses.end(), module.second->get_address()) == addresses.end())
+                    addresses.push_back(module.second->get_address());
             }
             for (auto const &module : jrms_)
             {
-                addresses.push_back(JRM_MODULE_ADDRESS | module.first);
+                if (std::find(addresses.begin(), addresses.end(), module.second->get_address()) == addresses.end())
+                    addresses.push_back(module.first);
             }
 
             // Send all known AMD Configurations
