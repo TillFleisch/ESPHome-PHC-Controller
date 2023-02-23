@@ -8,6 +8,8 @@ Smart PHC controller with PHC-Modules. A close up of the board containing the ES
 
 # Requirements
 
+ESPHome 2022.11 or lower (see timing requirements).
+
 This project has been developed and tested on a ESP32. A ESP8266 is probably going to work just fine.
 
 The PHC-Bus is RS-485 based. In order communicate on the bus a RS-485 TTL Adapter is required. Currently only a Chip with automatic flow control has been tested.
@@ -18,6 +20,10 @@ With the help of a step-down module/voltage converter the 24V supplied by the PH
 
 Make sure to remove any 
 existing controllers (STM - Steuermodul) from the bus, as they will interfere. 
+
+# Timing requirements
+The original PHC implementation sends acknowledgement messages with a `250us` delay. This component implements the same delay.
+On ESPHome versions prior to 2022.12 this does work. With the help of an oscilloscope you can verify the delay. ESPHome versions newer than 2022.11 increase the delay, rendering the system almost unusable. The specific reason for this problem is not yet known.
 
 # Configuration variables
 
