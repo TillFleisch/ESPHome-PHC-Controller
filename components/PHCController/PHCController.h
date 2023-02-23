@@ -11,7 +11,7 @@
 #define FLOW_PIN_PULL_HIGH_DELAY 0
 #define FLOW_PIN_PULL_LOW_DELAY 0
 
-#define TIMING_DELAY 1000
+#define TIMING_DELAY 250 // 250us on original PHC
 #define INITIAL_SYNC_DELAY 15
 
 namespace esphome
