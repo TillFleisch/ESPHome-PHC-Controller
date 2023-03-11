@@ -1,6 +1,14 @@
 esphome:
   name: phc-test
 
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+    # The timing is incorrect on new arduino versions or IDF based firmware
+    version: 1.0.6
+    platform_version: 3.5.0
+
 # Load components via Github
 external_components:
   - source: github://TillFleisch/ESPHome-PHC-Controller@main

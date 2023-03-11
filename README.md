@@ -25,6 +25,19 @@ existing controllers (STM - Steuermodul) from the bus, as they will interfere.
 The original PHC implementation sends acknowledgement messages with a `250us` delay. This component implements the same delay.
 On ESPHome versions prior to 2022.12 this does work. With the help of an oscilloscope you can verify the delay. ESPHome versions newer than 2022.11 increase the delay, rendering the system almost unusable. The specific reason for this problem is not yet known.
 
+On newer ESPHome versions one possible workaround is to use an older version of the Arduino framework.
+This can be achieved by adding the following version and platform version to the configuration file.
+
+```yaml
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+    # The timing is incorrect on new arduino versions or IDF based firmware
+    version: 1.0.6
+    platform_version: 3.5.0
+```
+
 # Configuration variables
 
 A example configuration can be found [here](example.yaml)
