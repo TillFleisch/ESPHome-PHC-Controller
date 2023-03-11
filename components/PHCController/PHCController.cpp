@@ -220,7 +220,7 @@ namespace esphome
         {
             ESP_LOGI(TAG, "Configuring Module (AMD/JRM): [DIP: %i]", id);
 
-            uint8_t message[7] = {AMD_MODULE_ADDRESS | id, 0x03, 0xFE, 0x00, 0xFF, 0x00, 0x00};
+            uint8_t message[7] = {static_cast<uint8_t>(AMD_MODULE_ADDRESS | id), 0x03, 0xFE, 0x00, 0xFF, 0x00, 0x00};
 
             short crc = util::PHC_CRC(message, 5);
             message[5] = static_cast<uint8_t>(crc & 0xFF);
