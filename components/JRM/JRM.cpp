@@ -9,9 +9,6 @@ namespace esphome
         using namespace cover;
 
         static const char *TAG = "JRM.cover";
-        std::random_device rd;
-        std::mt19937 rng(rd());
-        std::uniform_int_distribution<int> jitter(0, 10);
 
         void JRM::setup()
         {
@@ -26,8 +23,6 @@ namespace esphome
                 // Wait before retransmitting
                 if (millis() - last_request_ > RESEND_TIMEOUT)
                 {
-                    // Add a little jitter
-                    delay(jitter(rng));
                     if (resend_counter_ < MAX_RESENDS)
                     {
                         // Try resending as long as possible, double flip toggle

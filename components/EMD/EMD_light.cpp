@@ -7,9 +7,6 @@ namespace esphome
     {
 
         static const char *TAG = "EMD_light";
-        std::random_device rd;
-        std::mt19937 rng(rd());
-        std::uniform_int_distribution<int> jitter(0, 10);
 
         void EMD_light::setup()
         {
@@ -23,8 +20,6 @@ namespace esphome
                 // Wait before retransmitting
                 if (millis() - last_request > RESEND_TIMEOUT)
                 {
-                    // Add a little jitter
-                    delay(jitter(rng));
                     if (resend_counter < MAX_RESENDS)
                     {
                         // Try resending as long as possible

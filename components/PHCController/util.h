@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include "esphome/core/hal.h"
 
-#define RESEND_TIMEOUT 50
-#define MAX_RESENDS 40
+#define RESEND_TIMEOUT 10
+#define MAX_RESENDS 20
 
 #define EMD_MODULE_ADDRESS 0x00
 #define AMD_MODULE_ADDRESS 0x40
