@@ -78,6 +78,7 @@ namespace esphome
         void PHCController::dump_config()
         {
             ESP_LOGCONFIG(TAG, "PHC Controller");
+            check_uart_settings(19200, 2, uart::UART_CONFIG_PARITY_NONE, 8);
             if (flow_control_pin_ != NULL)
                 LOG_PIN("flow_control_pin: ", flow_control_pin_);
 
