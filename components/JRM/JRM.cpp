@@ -129,7 +129,11 @@ namespace esphome
             {
                 // Ignore no change in position
                 if (position == this->position)
+                {
+                    target_operation_ = current_operation;
+                    toggle_map->flip_toggle(this);
                     return;
+                }
 
                 target_position_ = position;
                 bool open = (operation_start_position_ < position);
