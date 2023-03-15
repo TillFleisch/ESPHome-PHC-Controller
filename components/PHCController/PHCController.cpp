@@ -33,7 +33,11 @@ namespace esphome
 
                 uint8_t toggle_and_length = read();
                 bool toggle = toggle_and_length & 0x80;            // Mask the MRB (toggle bit)
-                uint8_t content_length = toggle_and_length & 0x7F; // Mask everything except for the MRB (message length)
+                uint8_t content_length = toggle_and_length & 0x7F; // Mask everything except for the MSB (message length)
+
+                // Assert message length is plausible
+                if (content_length > 3)
+                    return;
 
                 // Read the actual message content
                 uint8_t msg[content_length + 2];
@@ -51,11 +55,6 @@ namespace esphome
                 {
                     ESP_LOGW(TAG, "Recieved bad message (checksum missmatch)");
 
-                    while (int waste = available())
-                    {
-                        uint8_t trash[waste];
-                        read_array(trash, waste);
-                    }
                     // Skip the loop if the checksum is wrong
                     return;
                 }
