@@ -198,23 +198,23 @@ namespace esphome
                             amd->publish_state(state);
                             handled = true;
                         }
+                    }
 
-                        // Handle output switches
-                        if (jrms_.count(util::key(device_id, i)))
+                    if (handled)
+                        return;
+
+                    // Acknowledge and free lock
+                    if (jrm_resource_lock_[device_id] != -1)
+                    {
+                        auto *jrm = jrms_[util::key(device_id, jrm_resource_lock_[device_id])];
+
+                        if (jrm->current_operation != jrm->get_target_operation())
                         {
-                            auto *jrm = jrms_[util::key(device_id, i)];
-                            // For some reason the cover ack-message does not contain which covers are moving, so we are guessing that the channel has been processed
-                            // This might lead to one cover not moving if 2 are manipulated at the same time
-                            // Only accepting a single change will increase the chance of correct acknowledgement
-                            if (jrm->current_operation != jrm->get_target_operation())
-                            {
-                                jrm->current_operation = jrm->get_target_operation();
-                                jrm->publish_state();
-                                handled = true;
-                                break;
-                            }
-                            handled = true;
+                            jrm->current_operation = jrm->get_target_operation();
+                            jrm->publish_state();
                         }
+                        handled = true;
+                        free_jrm_lock(device_id);
                     }
                     if (!handled)
                         ESP_LOGI(TAG, "No configuration found for Message from (AMD/JRM) Module: [DIP: %i]", device_id);

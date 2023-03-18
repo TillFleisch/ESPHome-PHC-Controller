@@ -19,11 +19,11 @@ namespace esphome
 {
     namespace phc_controller
     {
-
         class PHCController : public uart::UARTDevice, public Component
         {
         public:
-            void setup() override;
+            void
+            setup() override;
             void loop() override;
             void dump_config() override;
             /**
@@ -99,8 +99,39 @@ namespace esphome
              */
             void register_JRM(JRM_cover::JRM *obj)
             {
+                // Initialize resource lock with -1 (free)
+                jrm_resource_lock_[obj->get_address()] = -1;
                 jrms_[obj->get_key()] = obj;
                 obj->set_controller(this);
+            }
+
+            /**
+             * @brief Frees a JRM resource lock without any checks
+             *
+             * @param address Lock to clear
+             */
+            void free_jrm_lock(uint8_t address)
+            {
+                jrm_resource_lock_[address] = -1;
+            }
+
+            /**
+             * @brief Acquires the a resource lock of a module for a channel
+             *
+             * @param address Module for which a lock should be acquired
+             * @param channel Chanel which should acquire the lock
+             * @return true If the lock was acquired
+             * @return false If the lock is in use
+             */
+            bool acquire_jrm_lock(uint8_t address, uint8_t channel)
+            {
+                // Check if resource for lock is free & acquire for channel
+                if (jrm_resource_lock_[address] == -1)
+                {
+                    jrm_resource_lock_[address] = channel;
+                }
+
+                return jrm_resource_lock_[address] == channel;
             }
 
         protected:
@@ -182,6 +213,12 @@ namespace esphome
             std::map<uint16_t, JRM_cover::JRM *> jrms_;
 
             /**
+             * @brief JRM resource lock. The key is the module identitier and the value is channel currently owning it.
+             * -1 if it is not owned.
+             */
+            std::map<uint8_t, int8_t> jrm_resource_lock_;
+
+            /**
              * @brief Time since the last message has been received.
              *
              */
@@ -206,4 +243,14 @@ inline void util::Module::set_controller(esphome::phc_controller::PHCController 
 inline void util::Module::write_array(esphome::phc_controller::PHCController *controller, const uint8_t *data, size_t len, bool allow_weak_operation)
 {
     controller->write_array(data, len, allow_weak_operation);
-};
+}
+
+inline bool util::Module::acquire_jrm_lock(esphome::phc_controller::PHCController *controller, uint8_t address, uint8_t channel)
+{
+    return controller->acquire_jrm_lock(address, channel);
+}
+
+inline void util::Module::free_jrm_lock(esphome::phc_controller::PHCController *controller, uint8_t address)
+{
+    controller->free_jrm_lock(address);
+}

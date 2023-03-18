@@ -180,9 +180,45 @@ namespace util
         virtual void write_array(esphome::phc_controller::PHCController *controller, const uint8_t *data, size_t len, bool allow_weak_operation);
 
         /**
-         * @brief Syncs phc and entity state by forcing an update on the phc sytem.
-         *  This function is mainly used after initializtion as a workaround. The first message might not be answered correctly.
-         *  Sending the assumed known state sould make no phc state change, but fix the first message issue.
+         * @brief Tries to acquire the lock for a given channel on a module.
+         *
+         * @return true if the lock was acquired
+         */
+        bool acquire_jrm_lock()
+        {
+            return acquire_jrm_lock(controller, get_address(), get_channel());
+        };
+
+        /**
+         * @brief Frees the lock without any checks
+         *
+         */
+        void free_jrm_lock()
+        {
+            free_jrm_lock(controller, get_address());
+        }
+
+        /**
+         * @brief Tries to acquire the lock for a given channel on a module.
+         *
+         * @param controller The parent controller to which this module belongs
+         * @param address module id for which the lock should be acquired
+         * @param channel channel id which acquires the lock
+         * @return true if the lock was acquired
+         */
+        virtual bool acquire_jrm_lock(esphome::phc_controller::PHCController *controller, uint8_t address, uint8_t channel);
+
+        /**
+         * @brief Frees the lock without any checks
+         *
+         * @param controller The parent controller to which this module belongs
+         */
+        virtual void free_jrm_lock(esphome::phc_controller::PHCController *controller, uint8_t address);
+
+        /**
+         * @brief Syncs phc and entity state by forcing an update on the phc system.
+         *  This function is mainly used after initialization as a workaround. The first message might not be answered correctly.
+         *  Sending the assumed known state should make no phc state change, but fix the first message issue.
          */
         virtual void sync_state(){};
 

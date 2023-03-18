@@ -35,6 +35,7 @@ namespace esphome
                     {
                         // Reset the state and log a warning, device cannot be reached
                         ESP_LOGW(TAG, "Device not responding! Is the device connected to the bus? (DIP: %i)", address);
+                        free_jrm_lock();
                         current_operation = COVER_OPERATION_IDLE;
                         set_position(operation_start_position_);
                         publish_state();
@@ -180,42 +181,63 @@ namespace esphome
 
         void JRM::write_idle_operation(uint8_t &address, uint8_t &channel)
         {
-            uint8_t message[6] = {0x00};
+            if (acquire_jrm_lock())
+            {
 
-            // 3 MSBits determine the channel, lower 5 bits are for functionality
-            uint8_t function = (channel << 5) | 0x02;
+                uint8_t message[6] = {0x00};
 
-            message[0] = static_cast<uint8_t>(JRM_MODULE_ADDRESS | address);
-            message[1] = static_cast<uint8_t>((toggle_map->get_toggle(this) ? 0x80 : 0x00) | 0x02);
-            message[2] = function;
-            message[3] = 0xFC; // Prio
+                // 3 MSBits determine the channel, lower 5 bits are for functionality
+                uint8_t function = (channel << 5) | 0x02;
 
-            short crc = util::PHC_CRC(message, 4);
-            message[4] = static_cast<uint8_t>(crc & 0xFF);
-            message[5] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
+                message[0] = static_cast<uint8_t>(JRM_MODULE_ADDRESS | address);
+                message[1] = static_cast<uint8_t>((toggle_map->get_toggle(this) ? 0x80 : 0x00) | 0x02);
+                message[2] = function;
+                message[3] = 0xFC; // Prio
 
-            write_array(message, 6, false);
+                short crc = util::PHC_CRC(message, 4);
+                message[4] = static_cast<uint8_t>(crc & 0xFF);
+                message[5] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
+
+                write_array(message, 6, false);
+            }
+            else
+            {
+                ESP_LOGW(TAG, "JRM resource lock could not be acquired! Module: [DIP: %i, channel: %i]", address, channel);
+
+                // Reset counter while the lock is in use
+                resend_counter_ = 0;
+            }
         }
 
         void JRM::write_move_operation(uint8_t &address, uint8_t &channel, uint16_t &time, bool open)
         {
-            uint8_t message[8] = {0x00};
+            if (acquire_jrm_lock())
+            {
+                uint8_t message[8] = {0x00};
 
-            // 3 MSBits determine the channel, lower 5 bits are for functionality
-            uint8_t function = (channel << 5) | (open ? 0x05 : 0x06);
+                // 3 MSBits determine the channel, lower 5 bits are for functionality
+                uint8_t function = (channel << 5) | (open ? 0x05 : 0x06);
 
-            message[0] = static_cast<uint8_t>(JRM_MODULE_ADDRESS | address);
-            message[1] = static_cast<uint8_t>((toggle_map->get_toggle(this) ? 0x80 : 0x00) | 0x04);
-            message[2] = function;
-            message[3] = 0x07;      // Prio
-            message[4] = time;      // unsigned short time value
-            message[5] = time >> 8; // unsigned short time value
+                message[0] = static_cast<uint8_t>(JRM_MODULE_ADDRESS | address);
+                message[1] = static_cast<uint8_t>((toggle_map->get_toggle(this) ? 0x80 : 0x00) | 0x04);
+                message[2] = function;
+                message[3] = 0x07;      // Prio
+                message[4] = time;      // unsigned short time value
+                message[5] = time >> 8; // unsigned short time value
 
-            short crc = util::PHC_CRC(message, 6);
-            message[6] = static_cast<uint8_t>(crc & 0xFF);
-            message[7] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
+                short crc = util::PHC_CRC(message, 6);
+                message[6] = static_cast<uint8_t>(crc & 0xFF);
+                message[7] = static_cast<uint8_t>((crc & 0xFF00) >> 8);
 
-            write_array(message, 8, true);
+                write_array(message, 8, true);
+            }
+            else
+            {
+                ESP_LOGW(TAG, "Lock could not be acquired! Module: [DIP: %i, channel: %i]", address, channel);
+
+                // Reset counter while the lock is in use
+                resend_counter_ = 0;
+            }
         }
 
     } // namespace JRM_cover
