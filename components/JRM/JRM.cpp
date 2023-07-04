@@ -90,6 +90,7 @@ namespace esphome
             traits.set_is_assumed_state(!assume_position_);
             traits.set_supports_position(assume_position_);
             traits.set_supports_tilt(false);
+            traits.set_supports_stop(true);
 
             return traits;
         }
