@@ -11,7 +11,8 @@
 #define FLOW_PIN_PULL_HIGH_DELAY 0
 #define FLOW_PIN_PULL_LOW_DELAY 0
 
-#define TIMING_DELAY 250 // 250us on original PHC
+#define TIMING_DELAY 150 // 250us on original PHC
+// This value has been adjusted, such that the measured delay is roughly equal to 250us. This has changed with arduino core 2.0+
 #define INITIAL_SYNC_DELAY 15
 
 namespace esphome
