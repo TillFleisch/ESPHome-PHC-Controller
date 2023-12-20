@@ -1,6 +1,6 @@
 # ESPHome-PHC-Controller
 
-This project implements a PHC Controller which integrates into [Home Assistant](https://home-assistant.io) through [ESPHome](https://esphome.io). This could replace a existing dumb controller (STM - Steuermodul), thus smartifying a existing Phea PHC installation.
+This project implements a PEHA(acquired by Honeywell) PHC Controller which integrates into [Home Assistant](https://home-assistant.io) through [ESPHome](https://esphome.io). This solution can replace an existing dumb controller (STM - Steuermodul), thus smartifying an existing PEHA PHC installation.
 
 # Demo installation
 ![Smart PHC controller with Modules](smart_phc.jpg)
