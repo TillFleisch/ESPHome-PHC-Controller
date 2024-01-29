@@ -3,9 +3,9 @@ import esphome.config_validation as cv
 from esphome import pins
 from esphome.components import uart
 from esphome.components.uart import UARTComponent
-from esphome.const import CONF_ID, CONF_PIN
+from esphome.const import CONF_ID
 
-AUTO_LOAD = ["cover", "light", "switch", "AMD", "EMD", "JRM"]
+AUTO_LOAD = ["cover", "light", "switch", "binary_sensor", "AMD", "EMD", "JRM"]
 
 DEPENDENCIES = ["uart"]
 
