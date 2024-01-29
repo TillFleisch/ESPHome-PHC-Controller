@@ -16,7 +16,7 @@ namespace esphome
     {
         class PHCController;
     }
-}
+} // namespace esphome
 namespace util
 {
     /**
@@ -68,7 +68,10 @@ namespace util
          *
          * @param module The module for which the toggle should be flipped.
          */
-        void flip_toggle(Module *module) { set_toggle(module, !get_toggle(module)); };
+        void flip_toggle(Module *module)
+        {
+            set_toggle(module, !get_toggle(module));
+        };
 
     private:
         /**
@@ -112,28 +115,40 @@ namespace util
          *
          * @return uint8_t The modules address
          */
-        uint8_t get_address() { return address; }
+        uint8_t get_address()
+        {
+            return address;
+        }
 
         /**
          * @brief Get this entities channel
          *
          * @return uint8_t The channel associated with this entity
          */
-        uint8_t get_channel() { return channel; }
+        uint8_t get_channel()
+        {
+            return channel;
+        }
 
         /**
          * @brief Get the key unique to this address/channel combination
          *
          * @return uint16_t key
          */
-        uint16_t get_key() { return key; }
+        uint16_t get_key()
+        {
+            return key;
+        }
 
         /**
          * @brief Get the device class id of this module
          *
          * @return uint8_t device class id of this module
          */
-        virtual uint8_t get_device_class_id() { return 0x00; };
+        virtual uint8_t get_device_class_id()
+        {
+            return 0x00;
+        };
 
         /**
          * @brief Set the PHC controller.
@@ -149,7 +164,10 @@ namespace util
          * @param len Length of the given data
          * @param allow_weak_operation If true writing to the bus is not guaranteed
          */
-        void write_array(const uint8_t *data, size_t len, bool allow_weak_operation) { write_array(controller, data, len, allow_weak_operation); };
+        void write_array(const uint8_t *data, size_t len, bool allow_weak_operation)
+        {
+            write_array(controller, data, len, allow_weak_operation);
+        };
 
         /**
          * @brief Writes a array of bytes to the PHC-bus using the provided parent controller.
@@ -200,4 +218,4 @@ namespace util
         uint16_t key = 0;
     };
 
-}
+} // namespace util

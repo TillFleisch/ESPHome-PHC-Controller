@@ -19,8 +19,14 @@ namespace esphome
             void setup() override;
             void loop() override;
             void dump_config() override;
-            void sync_state() override { write_state(current_operation, target_position_); };
-            uint8_t get_device_class_id() { return JRM_MODULE_ADDRESS; };
+            void sync_state() override
+            {
+                write_state(current_operation, target_position_);
+            };
+            uint8_t get_device_class_id()
+            {
+                return JRM_MODULE_ADDRESS;
+            };
             cover::CoverTraits get_traits() override;
 
             /**
@@ -28,21 +34,30 @@ namespace esphome
              *
              * @return cover::CoverOperation
              */
-            cover::CoverOperation get_target_operation() { return target_operation_; };
+            cover::CoverOperation get_target_operation()
+            {
+                return target_operation_;
+            };
 
             /**
              * @brief Set the max close time, which guarantees that the cover will close
              *
              * @param time
              */
-            void set_max_close_time(uint32_t time) { max_open_time_ = time / 100; };
+            void set_max_close_time(uint32_t time)
+            {
+                max_open_time_ = time / 100;
+            };
 
             /**
              * @brief Set the max open time, which guarantees that the cover will open
              *
              * @param time
              */
-            void set_max_open_time(uint32_t time) { max_close_time_ = time / 100; };
+            void set_max_open_time(uint32_t time)
+            {
+                max_close_time_ = time / 100;
+            };
 
             /**
              * @brief Set the close time

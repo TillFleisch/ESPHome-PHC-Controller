@@ -27,10 +27,6 @@ namespace esphome
             uart::ESP32ArduinoUARTComponent *uartComponent = static_cast<uart::ESP32ArduinoUARTComponent *>(this->parent_);
             uartComponent->get_hw_serial()->setRxTimeout(1);
             uartComponent->get_hw_serial()->setRxFIFOFull(1);
-#elif USE_ESP8266
-            uart::ESP8266UartComponent *uartComponent = static_cast<uart::ESP8266UartComponent *>(this->parent_);
-            uartComponent->get_hw_serial()->setRxTimeout(1);
-            uartComponent->get_hw_serial()->setRxFIFOFull(1);
 #else
 #pragma message("Response timings on the IDF Framework are likely incorrect. Please use the Arduino Framework and ideally an ESP32.")
             ESP_LOGW(TAG, "Response timings on the IDF Framework are likely incorrect. Please use the Arduino Framework and ideally an ESP32.");

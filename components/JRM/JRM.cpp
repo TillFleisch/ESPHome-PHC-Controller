@@ -214,5 +214,5 @@ namespace esphome
             write_array(message, 8, true);
         }
 
-    } // namespace empty_cover
+    } // namespace JRM_cover
 } // namespace esphome

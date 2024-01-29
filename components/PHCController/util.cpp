@@ -44,4 +44,4 @@ namespace util
         this->toggles[module->get_device_class_id()][module->get_address()] = new_toggle;
     }
 
-}
+} // namespace util

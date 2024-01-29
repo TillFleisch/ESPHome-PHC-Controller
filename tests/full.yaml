@@ -1,0 +1,69 @@
+esphome:
+  name: phc
+
+esp32:
+  board: esp32dev
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+
+logger:
+  baud_rate: 0
+
+uart:
+  id: bus
+  tx_pin: TX
+  rx_pin: RX
+  baud_rate: 19200
+  stop_bits: 2
+
+PHCController:
+  id: controller1
+  uart_id: bus
+
+switch:
+  - platform: AMD
+    name: Living Room Outlet
+    phc_controller_id: controller1
+    dip: 6
+    channel: 4
+
+light:
+  - platform: AMD
+    name: Living Room
+    phc_controller_id: controller1
+    dip: 6
+    channel: 5
+
+  - platform: EMD
+    name: Office Feedback Light
+    phc_controller_id: controller1
+    dip: 2
+    channel: 3
+
+binary_sensor:
+  - platform: EMD
+    name: Office Light Switch
+    phc_controller_id: controller1
+    dip: 6
+    channel: 5
+
+cover:
+  - platform: JRM
+    name: Kitchen Left
+    phc_controller_id: controller1
+    dip: 0
+    channel: 0
+    max_open_time: 35s
+    max_close_time: 30s
+    assume_position:
+      open_time: 30s
+      close_time: 25s
+
+  - platform: JRM
+    name: Kitchen Right
+    phc_controller_id: controller1
+    dip: 0
+    channel: 1
