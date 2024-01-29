@@ -1,4 +1,4 @@
-# ESPHome-PHC-Controller
+# ESPHome-PHC-Controller [![CI](https://github.com/TillFleisch/ESPHome-PHC-Controller/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/TillFleisch/ESPHome-PHC-Controller/actions/workflows/ci.yaml)
 
 This project implements a PEHA(acquired by Honeywell) PHC Controller which integrates into [Home Assistant](https://home-assistant.io) through [ESPHome](https://esphome.io). This solution can replace an existing dumb controller (STM - Steuermodul), thus smartifying an existing PEHA PHC installation.
 
