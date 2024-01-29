@@ -2,24 +2,26 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import binary_sensor
 from esphome.const import CONF_ID
+
 from ..PHCController import CONTROLLER_ID, PHCController
 
 DEPENDENCIES = ["PHCController"]
 
-DEVICE_TYPE = 'device_type'
-ADDRESS = 'dip'
-CHANNEL = 'channel'
+DEVICE_TYPE = "device_type"
+ADDRESS = "dip"
+CHANNEL = "channel"
 
-EMD_ns = cg.esphome_ns.namespace('EMD_binary_sensor')
-EMD = EMD_ns.class_('EMD', binary_sensor.BinarySensor, cg.Component)
+EMD_ns = cg.esphome_ns.namespace("EMD_binary_sensor")
+EMD = EMD_ns.class_("EMD", binary_sensor.BinarySensor, cg.Component)
 
-CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend({
-    cv.GenerateID(): cv.declare_id(EMD),
-    cv.Required(CONTROLLER_ID): cv.use_id(PHCController),
-    cv.Required(ADDRESS): cv.int_range(min=0, max=31),
-    cv.Required(CHANNEL): cv.int_range(min=0, max=15)
-
-}).extend(cv.COMPONENT_SCHEMA)
+CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend(
+    {
+        cv.GenerateID(): cv.declare_id(EMD),
+        cv.Required(CONTROLLER_ID): cv.use_id(PHCController),
+        cv.Required(ADDRESS): cv.int_range(min=0, max=31),
+        cv.Required(CHANNEL): cv.int_range(min=0, max=15),
+    }
+).extend(cv.COMPONENT_SCHEMA)
 
 
 def to_code(config):

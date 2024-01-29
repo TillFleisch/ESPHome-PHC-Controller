@@ -3,27 +3,27 @@ import esphome.config_validation as cv
 from esphome import pins
 from esphome.components import uart
 from esphome.components.uart import UARTComponent
-
 from esphome.const import CONF_ID, CONF_PIN
 
-AUTO_LOAD = ['cover', 'light', 'switch', 'AMD', 'EMD', 'JRM']
+AUTO_LOAD = ["cover", "light", "switch", "AMD", "EMD", "JRM"]
 
-DEPENDENCIES = ['uart']
+DEPENDENCIES = ["uart"]
 
-CONTROLLER_ID = 'phc_controller_id'
-UART_ID = 'uart_id'
-FLOW_CONTROL_PIN = 'flow_control_pin'
+CONTROLLER_ID = "phc_controller_id"
+UART_ID = "uart_id"
+FLOW_CONTROL_PIN = "flow_control_pin"
 
 
-phc_controller_ns = cg.esphome_ns.namespace('phc_controller')
-PHCController = phc_controller_ns.class_(
-    'PHCController', cg.Component, uart.UARTDevice)
+phc_controller_ns = cg.esphome_ns.namespace("phc_controller")
+PHCController = phc_controller_ns.class_("PHCController", cg.Component, uart.UARTDevice)
 
-CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend({
-    cv.GenerateID(): cv.declare_id(PHCController),
-    cv.Required(UART_ID): cv.use_id(UARTComponent),
-    cv.Optional(FLOW_CONTROL_PIN): pins.gpio_output_pin_schema,
-})
+CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
+    {
+        cv.GenerateID(): cv.declare_id(PHCController),
+        cv.Required(UART_ID): cv.use_id(UARTComponent),
+        cv.Optional(FLOW_CONTROL_PIN): pins.gpio_output_pin_schema,
+    }
+)
 
 
 def to_code(config):
