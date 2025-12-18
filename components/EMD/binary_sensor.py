@@ -14,14 +14,18 @@ CHANNEL = "channel"
 EMD_ns = cg.esphome_ns.namespace("EMD_binary_sensor")
 EMD = EMD_ns.class_("EMD", binary_sensor.BinarySensor, cg.Component)
 
-CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend(
-    {
-        cv.GenerateID(): cv.declare_id(EMD),
-        cv.Required(CONTROLLER_ID): cv.use_id(PHCController),
-        cv.Required(ADDRESS): cv.int_range(min=0, max=31),
-        cv.Required(CHANNEL): cv.int_range(min=0, max=15),
-    }
-).extend(cv.COMPONENT_SCHEMA)
+CONFIG_SCHEMA = (
+    binary_sensor.binary_sensor_schema(EMD)
+    .extend(
+        {
+            cv.GenerateID(): cv.declare_id(EMD),
+            cv.Required(CONTROLLER_ID): cv.use_id(PHCController),
+            cv.Required(ADDRESS): cv.int_range(min=0, max=31),
+            cv.Required(CHANNEL): cv.int_range(min=0, max=15),
+        }
+    )
+    .extend(cv.COMPONENT_SCHEMA)
+)
 
 
 def to_code(config):

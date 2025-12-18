@@ -1,6 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import light, output, switch
+from esphome.components import light
+from esphome.components.light import LightType
 from esphome.const import CONF_OUTPUT_ID
 
 from ..PHCController import CONTROLLER_ID, PHCController
@@ -13,14 +14,18 @@ CHANNEL = "channel"
 amd_light_ns = cg.esphome_ns.namespace("AMD_binary")
 AMDLight = amd_light_ns.class_("AMD_light", cg.Component, light.LightOutput)
 
-CONFIG_SCHEMA = light.BINARY_LIGHT_SCHEMA.extend(
-    {
-        cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(AMDLight),
-        cv.Required(CONTROLLER_ID): cv.use_id(PHCController),
-        cv.Required(ADDRESS): cv.int_range(min=0, max=31),
-        cv.Required(CHANNEL): cv.int_range(min=0, max=7),
-    }
-).extend(cv.COMPONENT_SCHEMA)
+CONFIG_SCHEMA = (
+    light.light_schema(AMDLight, type_=LightType.BINARY)
+    .extend(
+        {
+            cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(AMDLight),
+            cv.Required(CONTROLLER_ID): cv.use_id(PHCController),
+            cv.Required(ADDRESS): cv.int_range(min=0, max=31),
+            cv.Required(CHANNEL): cv.int_range(min=0, max=7),
+        }
+    )
+    .extend(cv.COMPONENT_SCHEMA)
+)
 
 
 def to_code(config):
