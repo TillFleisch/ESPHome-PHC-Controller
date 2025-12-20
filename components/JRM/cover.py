@@ -5,6 +5,8 @@ from esphome.const import CONF_ID
 
 from ..PHCController import CONTROLLER_ID, PHCController
 
+DEPENDENCIES = ["PHCController"]
+
 JRM_cover_ns = cg.esphome_ns.namespace("JRM_cover")
 JRMCover = JRM_cover_ns.class_("JRM", cover.Cover, cg.Component)
 

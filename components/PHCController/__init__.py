@@ -17,12 +17,16 @@ FLOW_CONTROL_PIN = "flow_control_pin"
 phc_controller_ns = cg.esphome_ns.namespace("phc_controller")
 PHCController = phc_controller_ns.class_("PHCController", cg.Component, uart.UARTDevice)
 
-CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
-    {
-        cv.GenerateID(): cv.declare_id(PHCController),
-        cv.Required(UART_ID): cv.use_id(UARTComponent),
-        cv.Optional(FLOW_CONTROL_PIN): pins.gpio_output_pin_schema,
-    }
+CONFIG_SCHEMA = (
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.declare_id(PHCController),
+            cv.Required(UART_ID): cv.use_id(UARTComponent),
+            cv.Optional(FLOW_CONTROL_PIN): pins.gpio_output_pin_schema,
+        }
+    )
+    .extend(cv.COMPONENT_SCHEMA)
+    .extend(uart.UART_DEVICE_SCHEMA)
 )
 
 
