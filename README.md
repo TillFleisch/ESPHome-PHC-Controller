@@ -9,7 +9,7 @@ Smart PHC controller with PHC-Modules. A close up of the board containing the ES
 
 # Requirements
 
-This project has been developed and tested on an ESP32. A ESP8266 is probably going to work just fine. For best results use an ESP32 in combination with the Arduino Framework. The use of the and ESP8266 or the IDF framework will likely result in incorrectly timed messages on the bus.
+This project has been developed and tested on an ESP32. A ESP8266 is probably going to work just fine. For best results use an ESP32 in combination with the IDF Framework. As of ESPHome 2025.10, support for the Arduino Framework has been dropped due to underlying changes in ESPHome. The recommended installation method (and default in ESPHome as of 2026.1) is using the IDF Framework.
 
 The PHC-Bus is RS-485 based. In order communicate on the bus a RS-485 TTL Adapter is required. Currently only a Chip with automatic flow control has been tested.
 Connect the A/B wires to the PHC-bus. This can easily be done using the screw-terminal on the power-supply ([see](power_supply.jpg)).

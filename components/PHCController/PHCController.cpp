@@ -5,6 +5,8 @@
 #include "esphome/components/uart/uart_component_esp32_arduino.h"
 #elif USE_ESP8266
 #include "esphome/components/uart/uart_component_esp8266.h"
+#elif USE_ESP_IDF
+#include "esphome/components/uart/uart_component_esp_idf.h"
 #endif
 
 namespace esphome
@@ -24,12 +26,15 @@ namespace esphome
             setRxFIFOFull(1) is used to force immediate parsing of incoming data which fixes the delay issue
             */
 #ifdef USE_ESP32_FRAMEWORK_ARDUINO
+#pragma message("Arduino Framework only supported until ESPHome 2025.9!")
             uart::ESP32ArduinoUARTComponent *uartComponent = static_cast<uart::ESP32ArduinoUARTComponent *>(this->parent_);
             uartComponent->get_hw_serial()->setRxTimeout(1);
             uartComponent->get_hw_serial()->setRxFIFOFull(1);
-#else
-#pragma message("Response timings on the IDF Framework are likely incorrect. Please use the Arduino Framework and ideally an ESP32.")
-            ESP_LOGW(TAG, "Response timings on the IDF Framework are likely incorrect. Please use the Arduino Framework and ideally an ESP32.");
+#elif USE_ESP_IDF
+            uart::IDFUARTComponent *uartComponent = static_cast<uart::IDFUARTComponent *>(this->parent_);
+            uart_port_t hw_serial_number = static_cast<uart_port_t>(uartComponent->get_hw_serial_number());
+            uart_set_rx_timeout(hw_serial_number, 1);
+            uart_set_rx_full_threshold(hw_serial_number, 1);
 #endif
 
             if (flow_control_pin_ != NULL)
