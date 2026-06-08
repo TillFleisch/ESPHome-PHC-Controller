@@ -10,7 +10,7 @@ namespace esphome
 
         void EMD_light::setup()
         {
-            set_disabled_by_default(true);
+            
         }
 
         void EMD_light::loop()
